@@ -206,7 +206,7 @@ function configureBot(bot) {
       stopBot(username)
       keepAttacking = true;
       const cmd = message.split(' ')
-      let targetType = null;
+      let targetType = undefined;
       if (cmd.length >= 2) { // goto x y z
         targetType = cmd[1]
       }
@@ -246,13 +246,14 @@ function configureBot(bot) {
 
   function stopBot()
   {
-    farmingInProgress = false;
-    farmingDeliveryRun = false;
     bot.stopDigging();
     bot.pathfinder.stop()
     bot.pathfinder.setGoal(null)
     keepAttacking = false;
     lastBlockAttempted = undefined;
+    lastFarmedType = undefined;
+    farmingInProgress = false;
+    farmingDeliveryRun = false;
   }
 
   /**
@@ -292,7 +293,7 @@ function configureBot(bot) {
                 console.log("Farmer: DeliveryRun: Failed to make a delivery at my target, trying again soon")
                 setTimeout(() => {
                   farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
-                }, 500);
+                }, 100);
               } else {
                 console.log("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming")
                 farmingDeliveryRun = false;
@@ -307,7 +308,7 @@ function configureBot(bot) {
               console.log("Farmer: DeliveryRun: Didn't make it to my delivery target, trying again soon")
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
-              }, 500);
+              }, 100);
             } else {
               console.log("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming")
               farmingDeliveryRun = false;
@@ -356,7 +357,7 @@ function configureBot(bot) {
             console.error("Farmer: No " + itemType + " Found, trying again soon", err)
             setTimeout(() => {
               farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
-            }, 500);
+            }, 100);
           }
           else {
             console.error("Farmer: No " + itemType + " Found after 10 tries.. stopping the farming routine completely", err)
