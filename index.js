@@ -94,6 +94,14 @@ function configureBot(bot) {
         bot.whisper(username, 'YES, I will stop')
       }
       stopBot()
+    } else if (message.startsWith('locate')) {
+      // TODO Implement the bot telling you how many degrees left or right and up or down to walk toward it
+      let player = mcData.entitiesArray.find((entity) => {
+        if (entity.type === 'player'){
+          console.log("Evaluating: " + (player.displayName || player.name))
+        }
+        return false;
+      })
     } else if (message.startsWith('come')) {
       const cmd = message.split(' ')
       let range = undefined;
