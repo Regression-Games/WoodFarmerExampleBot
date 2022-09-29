@@ -49,19 +49,10 @@ function configureBot(bot) {
       if (++stuckCount > 5) {
         stuckCount = 0;
         console.log("Stuck bot: Stopping")
-        let fip = farmingInProgress;
-        let lft = lastFarmedType;
-        let lba = lastBlockAttempted;
         stopBot();
-        console.log("Stuck bot: Restarting in 500ms")
+        console.log("Stuck bot: Reloading in 500ms")
         setTimeout( () => {
-          if (fip) {
-            farmingInProgress = true;
-            farmingDeliveryRun = false;
-            farmerRoutine(lft || 'log')
-          } else if (lba) {
-            findAndDigBlock(undefined, lba?.name)
-          }
+          bot.end()
         }, 500)
       }
     }
