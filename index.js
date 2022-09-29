@@ -91,7 +91,7 @@ function configureBot(bot) {
   bot.on('chat', (...args) => {
     const parameters = args.join('] [');
     console.log(`CHAT event with parameters [${parameters}]`);
-    setTimeout( () => {handleChatOrWhisper(args[0], args[1]), 5)
+    setTimeout( () => {handleChatOrWhisper(args[0], args[1])}, 5)
   })
 
   function handleChatOrWhisper( username, message ) {
