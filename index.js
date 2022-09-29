@@ -98,7 +98,7 @@ function configureBot(bot) {
       // TODO Implement the bot telling you how many degrees left or right and up or down to walk toward it
       let player = mcData.entitiesArray.find((entity) => {
         if (entity.type === 'player'){
-          console.log("Evaluating: " + (player.displayName || player.name))
+          console.log("Evaluating: " + (entity.displayName || entity.name))
         }
         return false;
       })
