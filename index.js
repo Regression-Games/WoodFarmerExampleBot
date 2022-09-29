@@ -76,13 +76,13 @@ function configureBot(bot) {
   bot.on('whisper', (...args) => {
     const parameters = args.join('] [');
     console.log(`WHISPER event with parameters [${parameters}]`);
-    setTimeout( () => {handleChatOrWhisper(args[0], args[1])}, 5)
+    handleChatOrWhisper(args[0], args[1])
   })
 
   bot.on('chat', (...args) => {
     const parameters = args.join('] [');
     console.log(`CHAT event with parameters [${parameters}]`);
-    setTimeout( () => {handleChatOrWhisper(args[0], args[1])}, 5)
+    handleChatOrWhisper(args[0], args[1])
   })
 
   function handleChatOrWhisper( username, message ) {
@@ -103,9 +103,9 @@ function configureBot(bot) {
         range = cmd[1]
       }
       if (range) {
-        comeToPlayer(username,range).catch((err) => {console.log("Couldn't find: " + username + " in range: " + range)})
+        comeToPlayer(username,range).catch((err) => {console.error("Couldn't find: " + username + " in range: " + range, err)})
       } else {
-        comeToPlayer(username).catch((err) => {console.log("Couldn't find: " + username)})
+        comeToPlayer(username).catch((err) => {console.error("Couldn't find: " + username, err)})
       }
     } else if (message.startsWith('goto')) {
       const cmd = message.split(' ')
@@ -186,9 +186,9 @@ function configureBot(bot) {
         console.log('dropQuantity: ' + dropQuantity)
       }
       if (dropQuantity) {
-        dropInventoryItem(username, dropThing, dropQuantity)
+        dropInventoryItem(username, dropThing, dropQuantity).catch((err) => {console.error("Couldn't drop item: " + dropThing, err)})
       } else {
-        dropInventoryItem(username, dropThing)
+        dropInventoryItem(username, dropThing).catch((err) => {console.error("Couldn't drop item: " + dropThing, err)})
       }
     } else if (message.startsWith('dig')) {
       stopBot(username)
@@ -197,7 +197,7 @@ function configureBot(bot) {
       if (cmd.length >= 2) { // goto x y z
         blockType = cmd[1]
       }
-      findAndDigBlock(username, blockType)
+      findAndDigBlock(username, blockType).catch((err) => {console.error("Couldn't dig blockType: " + blockType, err)})
     } else if (message.startsWith('attack')) {
       stopBot(username)
       keepAttacking = true;
