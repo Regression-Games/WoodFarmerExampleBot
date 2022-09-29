@@ -281,7 +281,7 @@ function configureBot(bot) {
               // inside promise... need to run again
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold)
-              }, 10);
+              }, 0);
             }).catch( (err) => {
               if (failureCount < 10) {
                 console.log("Farmer: DeliveryRun: Failed to make a delivery at my target, trying again soon")
@@ -294,7 +294,7 @@ function configureBot(bot) {
                 // inside promise... need to run again
                 setTimeout(() => {
                   farmerRoutine(itemType, deliveryThreshold)
-                }, 10);
+                }, 0);
               }
             })
           }).catch( (err) => {
@@ -309,7 +309,7 @@ function configureBot(bot) {
               // inside promise... need to run again
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold)
-              }, 10);
+              }, 0);
             }
           })
         } else {
@@ -345,16 +345,16 @@ function configureBot(bot) {
           }
           setTimeout(() => {
             farmerRoutine(itemType, deliveryThreshold)
-          }, 10);
+          }, 0);
         }).catch( (err) => {
           if (failureCount < 10) {
-            console.error("Farmer: No " + itemType + " Found, trying again soon", err)
+            console.error("Farmer: No " + itemType + " found, trying again soon", err)
             setTimeout(() => {
               farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
             }, 100);
           }
           else {
-            console.error("Farmer: No " + itemType + " Found after 10 tries.. stopping the farming routine completely", err)
+            console.error("Farmer: No " + itemType + " found after 10 tries.. stopping the farming routine completely", err)
             farmingInProgress = false;
           }
         })
