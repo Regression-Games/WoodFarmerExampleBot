@@ -17,6 +17,7 @@ function configureBot(bot) {
   let keepAttacking = true;
   let lastBlockAttempted = undefined
 
+  let lastFarmedType = undefined;
   let farmingInProgress = false;
   let farmingDeliveryRun = false;
 
@@ -26,7 +27,7 @@ function configureBot(bot) {
   bot.on('spawn', () => {
     farmingInProgress = true;
     farmingDeliveryRun = false;
-    farmerRoutine('log')
+    farmerRoutine(lastFarmedType || 'log')
   })
 
   bot.on('path_update', (r) => {
@@ -50,7 +51,7 @@ function configureBot(bot) {
           stopBot()
           farmingInProgress = true;
           farmingDeliveryRun = false;
-          farmerRoutine('log')
+          farmerRoutine(lastFarmedType || 'log')
         }
         else if (lastBlockAttempted) {
           stopBot();
@@ -259,12 +260,12 @@ function configureBot(bot) {
    * @param deliveryThreshold
    */
   function farmerRoutine(itemType, deliveryThreshold = 10, failureCount = 0) {
-    console.log("TreeFarmer: farmingInProgress=" + farmingInProgress)
+    console.log("Farmer: farmingInProgress=" + farmingInProgress + " , itemType: " + itemType)
     if (farmingInProgress) {
 
       // do a delivery run
       if (farmingDeliveryRun) {
-        console.log("TreeFarmer: DeliveryRun: Finding a player to deliver to")
+        console.log("Farmer: DeliveryRun: Finding a player to deliver to")
         // find a target player
         const target = Object.entries(bot.players).find((pair) => {
           console.log("Checking Entity: " + pair[0] + " , " + pair[1].entity?.username)
@@ -276,10 +277,10 @@ function configureBot(bot) {
           return false;
         })
         if (target) {
-          console.log("TreeFarmer: DeliveryRun: Trying to deliver logs to: " + target[1].entity.username)
+          console.log("Farmer: DeliveryRun: Trying to deliver " + itemType + " to: " + target[1].entity.username)
           comeToPlayer(target[1].entity.username).then(() => {
             dropInventoryItem(target[1].entity.username, itemType).then( () => {
-              console.log("TreeFarmer: DeliveryRun: Made a delivery to: " + target[1].entity.username + ".. going back to farming")
+              console.log("Farmer: DeliveryRun: Made a delivery to: " + target[1].entity.username + ".. going back to farming")
               farmingDeliveryRun = false;
               // inside promise... need to run again
               setTimeout(() => {
@@ -287,12 +288,12 @@ function configureBot(bot) {
               }, 10);
             }).catch( (err) => {
               if (failureCount < 10) {
-                console.log("TreeFarmer: DeliveryRun: Failed to make a delivery at my target, trying again soon")
+                console.log("Farmer: DeliveryRun: Failed to make a delivery at my target, trying again soon")
                 setTimeout(() => {
                   farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
                 }, 500);
               } else {
-                console.log("TreeFarmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming")
+                console.log("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming")
                 farmingDeliveryRun = false;
                 // inside promise... need to run again
                 setTimeout(() => {
@@ -302,12 +303,12 @@ function configureBot(bot) {
             })
           }).catch( (err) => {
             if (failureCount < 10) {
-              console.log("TreeFarmer: DeliveryRun: Didn't make it to my delivery target, trying again soon")
+              console.log("Farmer: DeliveryRun: Didn't make it to my delivery target, trying again soon")
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
               }, 500);
             } else {
-              console.log("TreeFarmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming")
+              console.log("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming")
               farmingDeliveryRun = false;
               // inside promise... need to run again
               setTimeout(() => {
@@ -316,47 +317,48 @@ function configureBot(bot) {
             }
           })
         } else {
-          console.log("TreeFarmer: DeliveryRun: No player available for delivery.. going back to farming")
+          console.log("Farmer: DeliveryRun: No player available for delivery.. going back to farming")
           farmingDeliveryRun = false;
           // not in a promise, no setTimeout
         }
       }
 
-      // cut more logs
+      // cut more
       if (!farmingDeliveryRun) {
-        findAndDigBlock(undefined, 'log').then( async () => {
-          console.log("TreeFarmer: Dug a log")
+        findAndDigBlock(undefined, itemType).then( async () => {
+          console.log("Farmer: Dug a " + itemType)
+          lastFarmedType = itemType;
           // see if it's on the ground, and if so pick it up
-          let itemOnGround = findItemInRange('log', 7)
+          let itemOnGround = findItemInRange(itemType, 7)
           if (itemOnGround) {
             await pickupItem(itemOnGround).catch((err) => {});
           }
           let quantityAvailable = 0;
-          let logsInInventory = bot.inventory.items().filter((item) => {
-            if (item.name && item.name.toLowerCase().includes('log') || (item.displayName && item.displayName.toLowerCase().includes('log'))) {
+          let thingsInInventory = bot.inventory.items().filter((item) => {
+            if (item.name && item.name.toLowerCase().includes(itemType) || (item.displayName && item.displayName.toLowerCase().includes(itemType))) {
               quantityAvailable += item.count
               return true;
             }
             return false;
           })
           if (quantityAvailable >= deliveryThreshold) {
-            console.log("TreeFarmer: Scheduling a delivery run for " + quantityAvailable + " logs")
+            console.log("Farmer: Scheduling a delivery run for " + quantityAvailable + " " + itemType)
             farmingDeliveryRun = true;
           } else {
-            console.log("TreeFarmer: I have " + quantityAvailable + " / " + deliveryThreshold + " logs needed for a delivery")
+            console.log("Farmer: I have " + quantityAvailable + " / " + deliveryThreshold + " "  + itemType + " needed for a delivery")
           }
           setTimeout(() => {
             farmerRoutine(itemType, deliveryThreshold)
           }, 10);
         }).catch( (err) => {
           if (failureCount < 10) {
-            console.error("TreeFarmer: No Log Found, trying again soon", err)
+            console.error("Farmer: No " + itemType + " Found, trying again soon", err)
             setTimeout(() => {
               farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
             }, 500);
           }
           else {
-            console.error("TreeFarmer: No Log Found after 10 tries.. stopping the farming routine completely", err)
+            console.error("Farmer: No " + itemType + " Found after 10 tries.. stopping the farming routine completely", err)
             farmingInProgress = false;
           }
         })
