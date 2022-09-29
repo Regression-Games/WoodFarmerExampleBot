@@ -27,6 +27,7 @@ function configureBot(bot) {
   bot.on('spawn', () => {
     farmingInProgress = true;
     farmingDeliveryRun = false;
+    bot.settings.viewDistance = 'far';
     farmerRoutine(lastFarmedType || 'log')
   })
 
@@ -325,7 +326,7 @@ function configureBot(bot) {
 
       // cut more
       if (!farmingDeliveryRun) {
-        findAndDigBlock(undefined, itemType).then( async () => {
+        findAndDigBlock(undefined, itemType, false, 256).then( async () => {
           console.log("Farmer: Dug a " + itemType)
           lastFarmedType = itemType;
           // see if it's on the ground, and if so pick it up
