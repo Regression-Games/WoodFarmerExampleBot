@@ -527,11 +527,12 @@ function configureBot(bot) {
           reject(new Error("Couldn't get to or dig block"))
         })
       })
+    } else {
+      return new Promise(function (resolve, reject) {
+        console.log("No block to dig")
+        reject(new Error("No block to dig"))
+      })
     }
-    return new Promise(function(resolve,reject) {
-      console.log("No block to dig")
-      reject(new Error("No block to dig"))
-    })
   }
 
   function findBlock(username, blockType, onlyTakeTopBlocks=false, maxDistance = 30) {
