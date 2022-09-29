@@ -28,7 +28,7 @@ function configureBot(bot) {
     farmingInProgress = true;
     farmingDeliveryRun = false;
     bot.settings.viewDistance = 'far';
-    setTimeout(() => {farmerRoutine(lastFarmedType || 'log')}, 500);
+    farmerRoutine(lastFarmedType || 'log')
   })
 
   bot.on('path_update', (r) => {
