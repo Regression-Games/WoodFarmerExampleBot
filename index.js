@@ -204,7 +204,7 @@ function configureBot(bot) {
       stopBot(username)
       keepAttacking = true;
       const cmd = message.split(' ')
-      let targetType = undefined;
+      let targetType = null;
       if (cmd.length >= 2) { // goto x y z
         targetType = cmd[1]
       }
@@ -228,11 +228,17 @@ function configureBot(bot) {
           }, (err) => {
             console.error('Pathfinding error', err)
           })
-    } else if (message === 'farm trees') {
+    } else if (message === 'farm') {
       stopBot()
-      farmingInProgress = true;
-      farmingDeliveryRun = false;
-      farmerRoutine('log')
+      const cmd = message.split(' ')
+      let targetType = undefined;
+      if (cmd.length >= 2) { // goto x y z
+        targetType = cmd[1]
+        farmingInProgress = true;
+        farmingDeliveryRun = false;
+        farmerRoutine(targetType)
+      }
+
     }
   }
 
