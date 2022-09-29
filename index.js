@@ -50,10 +50,8 @@ function configureBot(bot) {
         stuckCount = 0;
         console.log("Stuck bot: Stopping")
         stopBot();
-        console.log("Stuck bot: Reloading in 500ms")
-        setTimeout( () => {
-          bot.end()
-        }, 500)
+        console.log("Stuck bot: Reloading ")
+        bot.end()
       }
     }
   })
