@@ -28,7 +28,7 @@ function configureBot(bot) {
     farmingInProgress = true;
     farmingDeliveryRun = false;
     bot.settings.viewDistance = 'far';
-    farmerRoutine(lastFarmedType || 'log')
+    setTimeout(() => {farmerRoutine(lastFarmedType || 'log')}, 500);
   })
 
   bot.on('path_update', (r) => {
@@ -48,16 +48,21 @@ function configureBot(bot) {
       // TODO: If still stuck after 10 ? Do we want to just respawn... b/c we're stuck stuck... or call for help / guide our player to us
       if (++stuckCount > 5) {
         stuckCount = 0;
-        if (farmingInProgress) {
-          stopBot()
-          farmingInProgress = true;
-          farmingDeliveryRun = false;
-          farmerRoutine(lastFarmedType || 'log')
-        }
-        else if (lastBlockAttempted) {
-          stopBot();
-          findAndDigBlock(undefined, lastBlockAttempted?.name)
-        }
+        console.log("Stuck bot: Stopping")
+        let fip = farmingInProgress;
+        let lft = lastFarmedType;
+        let lba = lastBlockAttempted;
+        stopBot();
+        console.log("Stuck bot: Restarting in 500ms")
+        setTimeout( () => {
+          if (fip) {
+            farmingInProgress = true;
+            farmingDeliveryRun = false;
+            farmerRoutine(lft || 'log')
+          } else if (lba) {
+            findAndDigBlock(undefined, lba?.name)
+          }
+        }, 500)
       }
     }
   })
@@ -80,13 +85,13 @@ function configureBot(bot) {
   bot.on('whisper', (...args) => {
     const parameters = args.join('] [');
     console.log(`WHISPER event with parameters [${parameters}]`);
-    handleChatOrWhisper(args[0], args[1])
+    setTimeout( () => {handleChatOrWhisper(args[0], args[1])}, 5)
   })
 
   bot.on('chat', (...args) => {
     const parameters = args.join('] [');
     console.log(`CHAT event with parameters [${parameters}]`);
-    handleChatOrWhisper(args[0], args[1])
+    setTimeout( () => {handleChatOrWhisper(args[0], args[1]), 5)
   })
 
   function handleChatOrWhisper( username, message ) {
