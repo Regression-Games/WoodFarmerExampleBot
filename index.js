@@ -584,7 +584,7 @@ function configureBot(bot) {
   function findAndAttackTarget(username, targetType) {
     // make sure the bot doesn't target us for death
     // also make sure we don't re-pick the last target on errors
-    const entity = bot.nearestEntity(ne => ((!targetType || (ne.name && (ne.name.toLowerCase() === targetType.toLowerCase())) || (ne.displayName && (ne.displayName.toLowerCase() === targetType.toLowerCase()))) && (!username || ne.username !== username)) && (ne.health > 0) && (ne.type === 'mob' || ne.type === 'player'));
+    const entity = bot.nearestEntity(ne => ((!targetType || (ne.name && (ne.name.toLowerCase().includes(targetType.toLowerCase()))) || (ne.displayName && (ne.displayName.toLowerCase().includes(targetType.toLowerCase())))) && (!username || ne.username !== username) && (ne.health > 0) && (ne.type === 'mob' || ne.type === 'player')));
     if (!entity) {
       console.log('NO, There are none of ' + targetType + ' to attack')
       if (username) {
