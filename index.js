@@ -100,7 +100,7 @@ function configureBot(bot) {
         bot.whisper(username, 'YES, I will stop')
       }
       stopBot()
-    } else if (message === 'come') {
+    } else if (message.startsWith('come')) {
       const cmd = message.split(' ')
       let range = undefined;
       if (cmd.length >= 2) { // goto x y z
@@ -133,7 +133,7 @@ function configureBot(bot) {
         bot.pathfinder.setMovements(defaultMove)
         bot.pathfinder.setGoal(new GoalY(y))
       }
-    } else if (message === 'follow') {
+    } else if (message.startsWith('follow')) {
       const cmd = message.split(' ')
       let range = undefined;
       if (cmd.length >= 2) { // goto x y z
@@ -145,7 +145,7 @@ function configureBot(bot) {
       } else {
         followPlayer(username)
       }
-    } else if (message === 'avoid') {
+    } else if (message.startsWith('avoid')) {
       const cmd = message.split(' ')
       let range = undefined;
       if (cmd.length >= 2) { // goto x y z
@@ -230,7 +230,7 @@ function configureBot(bot) {
           }, (err) => {
             console.error('Pathfinding error', err)
           })
-    } else if (message === 'farm') {
+    } else if (message.startsWith('farm')) {
       stopBot()
       const cmd = message.split(' ')
       let targetType = undefined;
@@ -238,7 +238,7 @@ function configureBot(bot) {
         targetType = cmd[1]
         farmingInProgress = true;
         farmingDeliveryRun = false;
-        farmerRoutine(targetType)
+        farmerRoutine(targetType.toLowerCase())
       }
 
     }
