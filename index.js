@@ -93,7 +93,7 @@ function configureBot(bot) {
     if (username === bot.username || username === 'you') return
 
     if (message === 'reinit') {
-      reloadBotCode(); // this isn't here, but it makes mineflayer crash and restart.. thus causing the desired reload effect
+      bot.end()
     } else if (message === 'stop') {
       console.log('YES, I will stop')
       if (username) {
