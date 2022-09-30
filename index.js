@@ -400,7 +400,7 @@ function configureBot(bot) {
     //TODO Never figured out how to get the name of a loose floating item, even by its id
     console.log("Looking for item " + itemName + " in range " + range)
     return bot.nearestEntity((entity) => {
-      if( entity.type === "object" && entity.objectType === "Item") {
+      if( entity.type === "object" && entity.objectType === "Item" && entity.onGround) {
         // console.log("Evaluating: " + entity.name + "-" + entity.displayName + " at (" + entity.position.x + "," + entity.position.y + "," + entity.position.z + ")")
         if (bot.entity.position.distanceTo(entity.position) < range) {
           console.log("Found " + (entity.displayName || entity.name))
