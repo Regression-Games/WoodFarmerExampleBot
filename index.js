@@ -48,8 +48,8 @@ function configureBot(bot) {
       // TODO: If still stuck after 10 ? Do we want to just respawn... b/c we're stuck stuck... or call for help / guide our player to us
       if (++stuckCount > 5) {
         stuckCount = 0;
-        console.log("Stuck bot: Stopping")
-        stopBot();
+        console.log("Stuck bot: Hard Stopping")
+        hardStopBot();
         console.log("Stuck bot: Trying to move to get unstuck")
         tryToUnstickBot();
         console.log("Stuck bot: Reloading ")
@@ -249,8 +249,25 @@ function configureBot(bot) {
     }
   }
 
-  function stopBot()
-  {
+  function hardStopBot() {
+    bot.stopDigging();
+    bot.pathfinder.stop()
+    bot.pathfinder.setGoal(null)
+
+    // kill all timers
+    var killId = setTimeout(function() {
+      for (var i = killId; i > 0; i--) clearInterval(i)
+    }, 10);
+
+    keepAttacking = false;
+    lastBlockAttempted = undefined;
+    lastFarmedType = undefined;
+    farmingInProgress = false;
+    farmingDeliveryRun = false;
+  }
+
+  function stopBot() {
+
     bot.stopDigging();
     bot.pathfinder.stop()
     bot.pathfinder.setGoal(null)
