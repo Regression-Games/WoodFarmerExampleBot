@@ -361,7 +361,7 @@ function configureBot(bot) {
           // see if it's on the ground, and if so pick it up
           let itemOnGround = findItemInRange(itemType, 7)
           if (itemOnGround) {
-            await pickupItem(itemOnGround).catch((err) => {});
+            await pickupItem(itemOnGround).catch((err) => {console.error('Failed to pickup item', err)});
           }
           let quantityAvailable = 0;
           let thingsInInventory = bot.inventory.items().filter((item) => {
