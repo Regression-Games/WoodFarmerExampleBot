@@ -58,11 +58,11 @@ function configureBot(bot) {
     }
   })
 
-  function tryToUnstickBot() {
+  async function tryToUnstickBot() {
     // get new X and Z +/- 5 positions from my current
     let newX = bot.entity.position.x+(Math.random()*10-5);
     let newZ = bot.entity.position.z+(Math.random()*10-5);
-    bot.pathfinder.goto(new GoalXZ(newX, newZ)).catch((err) => {console.log("Unable to move to unstick bot")})
+    await bot.pathfinder.goto(new GoalXZ(newX, newZ)).catch((err) => {console.log("Unable to move to unstick bot")})
   }
 
   /**
