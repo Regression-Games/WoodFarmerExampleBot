@@ -260,7 +260,8 @@ function configureBot(bot) {
     bot.pathfinder.stop()
     bot.pathfinder.setGoal(null)
 
-    // kill all timers
+    // kill all timers... this is a javascript trick to be able to find all outstanding timer intervals and clear all of them. this prevents you having
+    // a situation where you say... told the farmer to run again in N ms, but you said stop before that.. this will prevent that timer from every happening
     var killId = setTimeout(function() {
       for (var i = killId; i > 0; i--) clearInterval(i)
     }, 10);
