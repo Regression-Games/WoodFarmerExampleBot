@@ -50,11 +50,20 @@ function configureBot(bot) {
         stuckCount = 0;
         console.log("Stuck bot: Stopping")
         stopBot();
+        console.log("Stuck bot: Trying to move to get unstuck")
+        tryToUnstickBot();
         console.log("Stuck bot: Reloading ")
         bot.end()
       }
     }
   })
+
+  function tryToUnstickBot() {
+    // get new X and Z +/- 5 positions from my current
+    let newX = bot.entity.position.x+(Math.random()*10-5);
+    let newZ = bot.entity.position.z+(Math.random()*10-5);
+    bot.goto(new GoalXZ(newX, newZ)).catch((err) => {console.log("Unable to move to unstick bot")})
+  }
 
   /**
    * sample for equipping items that get picked up
@@ -98,7 +107,7 @@ function configureBot(bot) {
       // TODO Implement the bot telling you how many degrees left or right and up or down to walk toward it
       let player = mcData.entitiesArray.find((entity) => {
         if (entity.type === 'player'){
-          console.log("Evaluating: " + (entity.displayName || entity.name))
+          console.log("Evaluating: " + (entity.displayName || entity.name) + " - " + entity.)
         }
         return false;
       })
