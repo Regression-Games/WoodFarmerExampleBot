@@ -97,6 +97,12 @@ function configureBot(bot) {
 
     if (message === 'reinit') {
       bot.end()
+    } else if (message === 'hardstop') {
+      console.log('YES, I will hard stop')
+      if (username) {
+        bot.whisper(username, 'YES, I will hard stop')
+      }
+      hardStopBot()
     } else if (message === 'stop') {
       console.log('YES, I will stop')
       if (username) {
