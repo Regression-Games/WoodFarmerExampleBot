@@ -397,7 +397,7 @@ function configureBot(bot) {
   }
 
   function findItemInRange(itemName, range= 30) {
-    //TODO Never figured out how to get the name of a loose floating item, even by its id /wrists
+    //TODO Never figured out how to get the name of a loose floating item, even by its id
     console.log("Looking for item " + itemName + " in range " + range)
     return bot.nearestEntity((entity) => {
       if( entity.type === "object" && entity.objectType === "Item") {
@@ -569,7 +569,7 @@ function configureBot(bot) {
 
   function findBlock(username, blockType, onlyTakeTopBlocks=false, maxDistance = 30) {
     console.log("Finding block of type: " + blockType)
-    let theBlock = bot.findBlock({
+    let theBlocks = bot.findBlocks({
       point: bot.entity.position,
       matching: (block) => {
         // if nothing specified... try anything but air
@@ -596,6 +596,9 @@ function configureBot(bot) {
         return true;
       }
     })
+    // always picking the closest block seemed smart, until that block wasn't pathable and we needed to get something else, so now we do this randomly
+    let randomIndexInTheList = Math.round(Math.random()*(theBlocks.length-1));
+    let theBlock = randomIndexInTheList>=0?bot.blockAt(theBlocks[randomIndexInTheList]):undefined;
     if (!theBlock) {
       console.log('I did not find any ' + blockType + ' in range: ' + maxDistance)
       if (username) {
