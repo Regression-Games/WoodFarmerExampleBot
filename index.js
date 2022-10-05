@@ -45,8 +45,8 @@ function configureBot(bot) {
   bot.on('path_reset', (reason) => {
     console.log(`Path was reset for reason: ${reason}`)
     if ('stuck' === reason || 'place_error' === reason || 'dig_error' === reason) {
-      // TODO: If still stuck after 10 ? Do we want to just respawn... b/c we're stuck stuck... or call for help / guide our player to us
-      if (++stuckCount > 10) {
+      // TODO: If still stuck after 5 ? Do we want to just respawn... b/c we're stuck stuck... or call for help / guide our player to us
+      if (++stuckCount > 5) {
         stuckCount = 0;
         console.log("Stuck bot: Hard Stopping")
         hardStopBot();
