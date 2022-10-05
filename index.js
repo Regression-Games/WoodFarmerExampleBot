@@ -1,7 +1,6 @@
 const { mineflayer } = require('mineflayer')
 const { pathfinder, Movements } = require('mineflayer-pathfinder')
 const { GoalNear, GoalBlock, GoalGetToBlock, GoalLookAtBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
-const { Item } = require('prismarine-item')
 const { Vec3 } = require('vec3');
 
 /**
@@ -412,8 +411,12 @@ function configureBot(bot) {
     return bot.nearestEntity((entity) => {
       if( entity.type === "object" && entity.objectType === "Item" && entity.onGround) {
         console.log("Evaluating: " + entity.name + "-" + entity.displayName + " at (" + entity.position.x + "," + entity.position.y + "," + entity.position.z + ") - metadata: " + JSON.stringify(entity.metadata))
-        let theItem = Item.fromNotch(entity.metadata)
-        console.log("Item Info: " + (theItem.displayName || theItem.name))
+        try {
+          let theItem = mineflayer.Item.fromNotch(entity.metadata)
+          console.log("Item Info: " + (theItem.displayName || theItem.name))
+        } catch (err) {
+          console.error("Couldn't convert item from notch data", err)
+        }
         if (bot.entity.position.distanceTo(entity.position) < range) {
           console.log("Found " + (entity.displayName || entity.name))
           return true;
