@@ -46,23 +46,28 @@ function configureBot(bot) {
     console.log(`Path was reset for reason: ${reason}`)
     if ('stuck' === reason || 'place_error' === reason || 'dig_error' === reason) {
       // TODO: If still stuck after 10 ? Do we want to just respawn... b/c we're stuck stuck... or call for help / guide our player to us
-      if (++stuckCount > 5) {
+      if (++stuckCount > 10) {
         stuckCount = 0;
         console.log("Stuck bot: Hard Stopping")
         hardStopBot();
         console.log("Stuck bot: Trying to move to get unstuck")
-        tryToUnstickBot();
-        console.log("Stuck bot: Reloading ")
-        bot.end()
+        wanderTheBot().catch((err) => {
+          console.error("Stuck bot: Reloading ", err)
+          bot.end()
+        })
       }
     }
   })
 
-  async function tryToUnstickBot() {
-    // get new X and Z +/- 5 positions from my current
-    let newX = bot.entity.position.x+(Math.random()*10-5);
-    let newZ = bot.entity.position.z+(Math.random()*10-5);
-    await bot.pathfinder.goto(new GoalXZ(newX, newZ)).catch((err) => {console.log("Unable to move to unstick bot")})
+
+  /**
+   * Randomly wanders the bot -50->50 X and -50->50 Z from the current position
+   * @returns {Promise<void>}
+   */
+  async function wanderTheBot() {
+    let newX = bot.entity.position.x+(Math.random()*100-50);
+    let newZ = bot.entity.position.z+(Math.random()*100-50);
+    await bot.pathfinder.goto(new GoalXZ(newX, newZ))
   }
 
   /**
@@ -389,8 +394,11 @@ function configureBot(bot) {
             }, 100);
           }
           else {
-            console.error("Farmer: No " + itemType + " found after 10 tries.. stopping the farming routine completely", err)
-            farmingInProgress = false;
+            console.error("Farmer: No " + itemType + " found after 10 tries.. wandering the bot before resuming farming", err)
+            wanderTheBot().catch((err) => {
+              console.error("Farmer: Failed to move the bot to find more " + itemType + "... stopping farming routine completely", err)
+              farmingInProgress = false
+            })
           }
         })
       }
