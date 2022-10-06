@@ -564,44 +564,30 @@ function configureBot(bot) {
 
       bot.pathfinder.setMovements(defaultMove)
 
-      return new Promise(function (resolve, reject) {
+      return new Promise(async function (resolve, reject) {
         const rayBlock = rayTraceEntitySight(theBlock)
         if (!rayBlock) {
           bot.chat('Block is out of reach')
           return
         }
         console.log('Moving to block to dig it')
-        bot.pathfinder.goto(new GoalLookAtBlock(rayBlock.position, bot.world, {reach: 4}))
-          .then(async () => {
-            const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(rayBlock.position))
-            if (bestHarvestTool) {
-              await bot.equip(bestHarvestTool, 'hand')
-            }
-            console.log("Got to the block amd the right tool, now to dig it")
-            bot.dig(bot.blockAt(rayBlock.position), true, 'raycast')
-                .then(() => {
-                  console.log('I dug up a ' + blockName)
-                  if (username) {
-                    bot.whisper(username, 'I dug up a ' + blockName)
-                  }
-                  resolve()
-                })
-                .catch(err => {
-                  console.error('ERROR, I had problem trying to dig ' + blockName, err)
-                  if (username) {
-                    bot.whisper(username, 'ERROR, I had problem trying to dig ' + blockName)
-                  }
-                  reject(new Error("Couldn't get to or dig block"))
-                })
-          })
-          .catch((err) => {
-            console.error('ERROR, I had pathfinding problem trying to dig ' + blockName, err)
-            if (username) {
-              bot.whisper(username, 'ERROR, I had pathfinding problem trying to dig ' + blockName)
-            }
-            reject(new Error("Couldn't get to or dig block"))
-          })
-      })
+        try {
+          await bot.pathfinder.goto(new GoalLookAtBlock(rayBlock.position, bot.world, {reach: 4}))
+          const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(rayBlock.position))
+          if (bestHarvestTool) {
+            await bot.equip(bestHarvestTool, 'hand')
+          }
+          console.log("Got to the block amd have the right tool, now to dig it")
+          await bot.dig(bot.blockAt(rayBlock.position), true, 'raycast')
+          resolve()
+        } catch (err) {
+          console.error('ERROR, I had a problem trying to dig ' + blockName, err)
+          if (username) {
+            bot.whisper(username, 'ERROR, I had a problem trying to dig ' + blockName)
+          }
+          reject(new Error("Couldn't get to or dig block"))
+        }
+      }
     } else {
       return new Promise(function (resolve, reject) {
         console.log("No block to dig")
