@@ -65,7 +65,7 @@ function configureBot(bot) {
    * Randomly wanders the bot minRange->maxRange X and minRange->maxRange Z from the current position
    * @returns {Promise<void>}
    */
-  function wanderTheBot(minRange=50, maxRange=50) {
+  function wanderTheBot(minRange=20, maxRange=20) {
     let xRange = (minRange + (Math.random()*(maxRange-minRange))) * (Math.random() < 0.5 ? -1 : 1);
     let zRange = (minRange + (Math.random()*(maxRange-minRange))) * (Math.random() < 0.5 ? -1 : 1);
     let newX = bot.entity.position.x + xRange;
