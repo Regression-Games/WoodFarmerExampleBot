@@ -593,36 +593,45 @@ function configureBot(bot) {
 
       return new Promise(function (resolve, reject) {
         console.log('Moving to block to dig it')
-        bot.pathfinder.goto(new GoalLookAtBlock(theBlock.position, bot.world, {reach: 4}))
-            .then( async () => {
-              const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(theBlock.position))
-              if (bestHarvestTool) {
-                await bot.equip(bestHarvestTool, 'hand')
-              }
-              console.log("Got to the block and the right tool, now to dig it")
-              bot.dig(bot.blockAt(theBlock.position))
-                  .then(() => {
-                    console.log('I dug up a ' + blockName)
-                    if (username) {
-                      bot.whisper(username, 'I dug up a ' + blockName)
-                    }
-                    resolve()
-                  })
-                  .catch(err => {
-                    console.error('ERROR, I had problem trying to dig ' + blockName, err)
-                    if (username) {
-                      bot.whisper(username, 'ERROR, I had problem trying to dig ' + blockName)
-                    }
-                    reject(new Error("Couldn't get to or dig block"))
-                  })
-            })
-            .catch((err) => {
-              console.error('ERROR, I had pathfinding problem trying to dig ' + blockName, err)
-              if (username) {
-                bot.whisper(username, 'ERROR, I had pathfinding problem trying to dig ' + blockName)
-              }
-              reject(new Error("Couldn't get to or dig block"))
-            })
+        try {
+          bot.pathfinder.goto(new GoalLookAtBlock(theBlock.position, bot.world, {reach: 4}))
+              .then(async () => {
+                const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(theBlock.position))
+                if (bestHarvestTool) {
+                  try {
+                    await bot.equip(bestHarvestTool, 'hand')
+                  } catch(err) {
+                    console.err('Unable to equip a better tool', err)
+                  }
+                }
+                console.log("Got to the block and the right tool, now to dig it")
+                bot.dig(bot.blockAt(theBlock.position))
+                    .then(() => {
+                      console.log('I dug up a ' + blockName)
+                      if (username) {
+                        bot.whisper(username, 'I dug up a ' + blockName)
+                      }
+                      resolve()
+                    })
+                    .catch(err => {
+                      console.error('ERROR, I had problem trying to dig ' + blockName, err)
+                      if (username) {
+                        bot.whisper(username, 'ERROR, I had problem trying to dig ' + blockName)
+                      }
+                      reject(new Error("Couldn't get to or dig block"))
+                    })
+              })
+              .catch((err) => {
+                console.error('ERROR, I had pathfinding problem trying to dig ' + blockName, err)
+                if (username) {
+                  bot.whisper(username, 'ERROR, I had pathfinding problem trying to dig ' + blockName)
+                }
+                reject(new Error("Couldn't get to or dig block"))
+              })
+        } catch (err) {
+          console.error('Error pathing/digging a block', err)
+          reject(new Error('Error pathing/digging a block'))
+        }
       })
     } else {
       return new Promise(function (resolve, reject) {
