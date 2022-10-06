@@ -634,7 +634,7 @@ function configureBot(bot) {
         }
         return true;
       },
-      count: 10, // return up to N options... thus allowing us to pick the easiest to get to
+      count: 5, // return up to N options... thus allowing us to pick the easiest to get to
     })
 
     // always picking the closest block seemed smart, until that block wasn't pathable and we needed to get something else, so now we do this randomly
