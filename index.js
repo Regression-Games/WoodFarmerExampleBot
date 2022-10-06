@@ -442,6 +442,7 @@ function configureBot(bot) {
    * @param range
    */
   function pickupItem(item) {
+    console.log('Going to pickup item - ' + (item.displayName || item.name))
     if (item) {
       return bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
     } else {
