@@ -561,7 +561,7 @@ function configureBot(bot) {
       if (username) {
         bot.whisper(username, 'YES, I will dig - ' + blockName)
       }
-      let pos = theBlock.position;
+
       bot.pathfinder.setMovements(defaultMove)
 
       return new Promise(function (resolve, reject) {
@@ -570,6 +570,7 @@ function configureBot(bot) {
           bot.chat('Block is out of reach')
           return
         }
+        console.log('Moving to block to dig it')
         bot.pathfinder.goto(new GoalLookAtBlock(rayBlock.position, bot.world, {reach: 4}))
           .then(async () => {
             const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(rayBlock.position))
