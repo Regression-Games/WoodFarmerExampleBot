@@ -74,11 +74,15 @@ function configureBot(bot) {
   bot.inventory.on('windowUpdate', function(collector, collected) {
     if(collector.type === 'player' && collected.type === 'object' && collector.username == bot.username) {
       let rawItem = collected.metadata[10];
-      let item = mineflayer.Item.fromNotch(rawItem);
-      if(item.name=="iron_helmet") {
-        bot.equip(item.type,"head");
-      } else if(item.name=="leather_helmet") {
-        bot.equip(item.type,"head");
+      try {
+        let item = mineflayer.Item.fromNotch(rawItem);
+        if (item.name == "iron_helmet") {
+          bot.equip(item.type, "head");
+        } else if (item.name == "leather_helmet") {
+          bot.equip(item.type, "head");
+        }
+      } catch (err) {
+
       }
     }
   });
@@ -310,7 +314,7 @@ function configureBot(bot) {
         })
         if (target) {
           console.log("Farmer: DeliveryRun: Trying to deliver " + itemType + " to: " + target[1].entity.username)
-          comeToPlayer(target[1].entity.username, 3).then(() => {
+          comeToPlayer(target[1].entity.username, 4).then(() => {
             dropInventoryItem(target[1].entity.username, itemType).then( () => {
               console.log("Farmer: DeliveryRun: Made a delivery to: " + target[1].entity.username + ".. going back to farming")
               farmingDeliveryRun = false;
