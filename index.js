@@ -390,7 +390,7 @@ function configureBot(bot) {
         }).catch( (err) => {
           if (failureCount < 5) {
             console.error("Farmer: No " + itemType + " found, wandering the bot before resuming farming", err)
-            wanderTheBot().then( () => {
+            wanderTheBot(10,20).then( () => {
               console.log('Farmer: Finished wandering... retrying farming')
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold)
@@ -642,7 +642,7 @@ function configureBot(bot) {
         }
         return true;
       },
-      count: 5, // return up to N options... thus allowing us to pick the easiest to get to
+      count: 3, // return up to N options... thus allowing us to pick the easiest to get to
     })
 
     // always picking the closest block seemed smart, until that block wasn't pathable and we needed to get something else, so now we do this randomly
