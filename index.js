@@ -41,7 +41,7 @@ function configureBot(bot) {
 
   let stuckCount = 0
 
-  bot.on('path_reset', (reason) => {
+  bot.on('path_reset', async (reason) => {
     console.log(`Path was reset for reason: ${reason}`)
     if ('stuck' === reason || 'place_error' === reason || 'dig_error' === reason) {
       // TODO: If still stuck after 5 ? Do we want to just respawn... b/c we're stuck stuck... or call for help / guide our player to us
@@ -51,11 +51,6 @@ function configureBot(bot) {
         bot.stopDigging();
         bot.pathfinder.stop()
         bot.pathfinder.setGoal(null)
-        console.log("Stuck bot: Trying to move to get unstuck")
-        wanderTheBot().catch((err) => {
-          console.error("Stuck bot: Reloading ", err)
-          bot.end()
-        })
       }
     }
   })
@@ -362,9 +357,15 @@ function configureBot(bot) {
 
       // cut more
       if (!farmingDeliveryRun) {
-        findAndDigBlock(undefined, itemType, false, 50).then( () => {
+        findAndDigBlock(undefined, itemType, false, 50).then( async () => {
           console.log("Farmer: Dug a " + itemType)
           lastFarmedType = itemType;
+          let itemOnGround = findItemInRange(itemType, 7)
+          if (itemOnGround) {
+            await pickupItem(itemOnGround).catch((err) => {
+              console.error('Failed to pickup item', err)
+            });
+          }
           let quantityAvailable = 0;
           let thingsInInventory = bot.inventory.items().filter((item) => {
             if (item.name && item.name.toLowerCase().includes(itemType) || (item.displayName && item.displayName.toLowerCase().includes(itemType))) {
@@ -377,7 +378,7 @@ function configureBot(bot) {
             console.log("Farmer: Scheduling a delivery run for " + quantityAvailable + " " + itemType)
             farmingDeliveryRun = true;
           } else {
-            console.log("Farmer: I have " + quantityAvailable + " / " + deliveryThreshold + " "  + itemType + " needed for a delivery")
+            console.log("Farmer: I have " + quantityAvailable + " / " + deliveryThreshold + " " + itemType + " needed for a delivery")
           }
           setTimeout(() => {
             farmerRoutine(itemType, deliveryThreshold)
