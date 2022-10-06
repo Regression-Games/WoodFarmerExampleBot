@@ -3,8 +3,6 @@ const { pathfinder, Movements } = require('mineflayer-pathfinder')
 const { GoalNear, GoalBlock, GoalGetToBlock, GoalLookAtBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
 const { Vec3 } = require('vec3');
 
-import { Item } from 'prismarine-item';
-
 /**
  * Mineflayer API docs - https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md
  * Mineflayer Pathfinder API docs - https://github.com/PrismarineJS/mineflayer-pathfinder/blob/master/readme.md
@@ -78,7 +76,7 @@ function configureBot(bot) {
   bot.inventory.on('windowUpdate', function(collector, collected) {
     if(collector.type === 'player' && collected.type === 'object' && collector.username == bot.username) {
       let rawItem = collected.metadata[10];
-      let item = Item.fromNotch(rawItem);
+      let item = mineflayer.Item.fromNotch(rawItem);
       if(item.name=="iron_helmet") {
         bot.equip(item.type,"head");
       } else if(item.name=="leather_helmet") {
@@ -416,7 +414,7 @@ function configureBot(bot) {
         try {
           // Understanding entity metadata ... https://wiki.vg/Entity_metadata#Entity_Metadata_Format
           // since this is an item entity, we can parse the item data from field index 8
-          let theItem = Item.fromNotch(entity.metadata[8])
+          let theItem = mineflayer.Item.fromNotch(entity.metadata[8])
           console.log("Item Info: " + (theItem.displayName || theItem.name))
         } catch (err) {
           console.error("Couldn't convert item from notch data", err)
