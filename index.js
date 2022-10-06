@@ -375,7 +375,10 @@ function configureBot(bot) {
           }
           let quantityAvailable = 0;
           let thingsInInventory = bot.inventory.items().filter((item) => {
-            if (item.name && item.name.toLowerCase().includes(itemType) || (item.displayName && item.displayName.toLowerCase().includes(itemType))) {
+            let isAxe = itemType.toLowerCase().includes('axe');
+            let itemNameMatches = (item.name && item.name.toLowerCase().includes(itemType.toLowerCase()) && (isAxe || !item.name.toLowerCase().includes('axe')));
+            let displayNameMatches = (item.displayName && item.displayName.toLowerCase().includes(itemType.toLowerCase()) && (isAxe || !item.displayName.toLowerCase().includes('axe')));
+            if (itemNameMatches || displayNameMatches) {
               quantityAvailable += item.count
               return true;
             }
