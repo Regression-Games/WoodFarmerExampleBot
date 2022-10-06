@@ -639,7 +639,7 @@ function configureBot(bot) {
     // always picking the closest block seemed smart, until that block wasn't pathable and we needed to get something else, so now we do this randomly
     let randomIndexInTheList = Math.round(Math.random()*(theBlocks.length-1));
     console.log('Trying to use found block at index: ' + randomIndexInTheList + ' from list size: ' + theBlocks.length)
-    let theBlock = randomIndexInTheList>=0?bot.blockAt(theBlocks[randomIndexInTheList]):null;
+    let theBlock = (theBlocks.length > 0 && randomIndexInTheList>=0)?bot.blockAt(theBlocks[randomIndexInTheList]):null;
     if (!theBlock) {
       console.log('I did not find any ' + blockType + ' in range: ' + maxDistance)
       if (username) {
