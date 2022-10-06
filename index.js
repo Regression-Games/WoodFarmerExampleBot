@@ -551,6 +551,7 @@ function configureBot(bot) {
       if (rayBlock) {
         return rayBlock
       }
+      return null
     } else {
       throw Error('bot.world.raycast does not exists. Try updating prismarine-world.')
     }
@@ -567,19 +568,6 @@ function configureBot(bot) {
       bot.pathfinder.setMovements(defaultMove)
 
       return new Promise(function (resolve, reject) {
-        
-        console.log('Raytracing to make sure I can see the block - ' + blockName)
-        try {
-          const rayBlock = rayTraceEntitySight(theBlock)
-          if (!rayBlock) {
-            console.log('Block is out of reach - ' + blockName)
-            bot.whisper(username, 'Block is out of reach - ' + blockName)
-            reject(new Error('Block is out of reach'))
-          }
-        } catch (error) {
-          console.error('Failed to raycast check the block', error)
-        }
-
         console.log('Moving to block to dig it')
         bot.pathfinder.goto(new GoalLookAtBlock(rayBlock.position, bot.world, {reach: 4}))
             .then( async () => {
@@ -587,8 +575,8 @@ function configureBot(bot) {
               if (bestHarvestTool) {
                 await bot.equip(bestHarvestTool, 'hand')
               }
-              console.log("Got to the block amd the right tool, now to dig it")
-              bot.dig(bot.blockAt(rayBlock.position), true, 'raycast')
+              console.log("Got to the block and the right tool, now to dig it")
+              bot.dig(bot.blockAt(theBlock.position))
                   .then(() => {
                     console.log('I dug up a ' + blockName)
                     if (username) {
