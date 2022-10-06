@@ -315,7 +315,7 @@ function configureBot(bot) {
         })
         if (target) {
           console.log("Farmer: DeliveryRun: Trying to deliver " + itemType + " to: " + target[1].entity.username)
-          comeToPlayer(target[1].entity.username).then(() => {
+          comeToPlayer(target[1].entity.username, 3).then(() => {
             dropInventoryItem(target[1].entity.username, itemType).then( () => {
               console.log("Farmer: DeliveryRun: Made a delivery to: " + target[1].entity.username + ".. going back to farming")
               farmingDeliveryRun = false;
