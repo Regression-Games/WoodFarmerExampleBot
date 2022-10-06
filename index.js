@@ -469,7 +469,7 @@ function configureBot(bot) {
     let itemsToDrop = bot.inventory.items().filter((item) => {
       // don't drop an 'axe' unless it has explicitly requested.. this prevents the bot from dropping stone tools when dropping stone
       let isAxe = itemName.toLowerCase().includes('axe');
-      let itemNameMatches = (item.name && item.name.toLowerCase().includes(itemName.toLowerCase()) && (!isAxe || !item.name.toLowerCase().includes('axe')));
+      let itemNameMatches = (item.name && item.name.toLowerCase().includes(itemName.toLowerCase()) && (isAxe || !item.name.toLowerCase().includes('axe')));
       let displayNameMatches = (item.displayName && item.displayName.toLowerCase().includes(itemName.toLowerCase()) && (isAxe || !item.displayName.toLowerCase().includes('axe')));
       if(itemNameMatches || displayNameMatches) {
         quantityAvailable += item.count
