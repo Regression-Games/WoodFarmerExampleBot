@@ -637,7 +637,11 @@ function configureBot(bot) {
       count: 10, // return up to N options... thus allowing us to pick the easiest to get to
     })
 
-    if (!theBlocks || theBlocks.length == 0) {
+    // always picking the closest block seemed smart, until that block wasn't pathable and we needed to get something else, so now we do this randomly
+    let randomIndexInTheList = Math.round(Math.random()*(theBlocks.length-1));
+    console.log('Trying to use found block at index: ' + randomIndexInTheList + ' from list size: ' + theBlocks.length)
+    let theBlock = randomIndexInTheList>=0?bot.blockAt(theBlocks[randomIndexInTheList]):undefined;
+    if (!theBlock) {
       console.log('I did not find any ' + blockType + ' in range: ' + maxDistance)
       if (username) {
         bot.whisper(username, 'I did not find any ' + blockType + ' in range: ' + maxDistance)
