@@ -294,7 +294,7 @@ function configureBot(bot) {
    * @param itemType
    * @param deliveryThreshold
    */
-  function farmerRoutine(itemType, deliveryThreshold = 10, failureCount = 0) {
+  async function farmerRoutine(itemType, deliveryThreshold = 10, failureCount = 0) {
     console.log("Farmer: farmingInProgress=" + farmingInProgress + " , itemType: " + itemType)
     if (farmingInProgress) {
 
@@ -360,7 +360,8 @@ function configureBot(bot) {
 
       // cut more
       if (!farmingDeliveryRun) {
-        findAndDigBlock(undefined, itemType, false, 256).then( async () => {
+        await findAndDigBlock(undefined, itemType, false, 256)
+        try {
           console.log("Farmer: Dug a " + itemType)
           lastFarmedType = itemType;
           // see if it's on the ground, and if so pick it up
@@ -385,7 +386,7 @@ function configureBot(bot) {
           setTimeout(() => {
             farmerRoutine(itemType, deliveryThreshold)
           }, 0);
-        }).catch( (err) => {
+        } catch(err) {
           if (failureCount < 10) {
             console.error("Farmer: No " + itemType + " found, trying again soon", err)
             setTimeout(() => {
@@ -399,7 +400,7 @@ function configureBot(bot) {
               farmingInProgress = false
             })
           }
-        })
+        }
       }
     }
   }
