@@ -587,7 +587,7 @@ function configureBot(bot) {
           }
           reject(new Error("Couldn't get to or dig block"))
         }
-      }
+      })
     } else {
       return new Promise(function (resolve, reject) {
         console.log("No block to dig")
