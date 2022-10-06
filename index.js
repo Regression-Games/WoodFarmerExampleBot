@@ -375,9 +375,11 @@ function configureBot(bot) {
           lastFarmedType = itemType;
           let itemOnGround = findItemInRange(itemType, 7)
           if (itemOnGround) {
-            await pickupItem(itemOnGround).catch((err) => {
+            try {
+              await pickupItem(itemOnGround);
+            } catch(err) {
               console.error('Failed to pickup item', err)
-            });
+            }
           }
           let quantityAvailable = 0;
           let thingsInInventory = bot.inventory.items().filter((item) => {
