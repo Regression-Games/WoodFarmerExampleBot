@@ -360,7 +360,7 @@ function configureBot(bot) {
 
       // cut more
       if (!farmingDeliveryRun) {
-        findAndDigBlock(undefined, itemType, false, 256).then(  () => {
+        findAndDigBlock(undefined, itemType, false, 50).then(  () => {
           console.log("Farmer: Dug a " + itemType)
           lastFarmedType = itemType;
           let quantityAvailable = 0;
@@ -381,18 +381,23 @@ function configureBot(bot) {
             farmerRoutine(itemType, deliveryThreshold)
           }, 0);
         }).catch( (err) => {
-          if (failureCount < 10) {
-            console.error("Farmer: No " + itemType + " found, trying again soon", err)
-            setTimeout(() => {
-              farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
-            }, 100);
+          if (failureCount < 5) {
+            console.error("Farmer: No " + itemType + " found, wandering the bot before resuming farming", err)
+            wanderTheBot().then( () => {
+              console.log('Farmer: Finished wandering... retrying farming')
+              setTimeout(() => {
+                farmerRoutine(itemType, deliveryThreshold)
+              }, 0);
+            }).catch((err) => {
+              console.error("Farmer: Failed to wander the bot... retrying farming")
+              setTimeout(() => {
+                farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
+              }, 100);
+            })
           }
           else {
-            console.error("Farmer: No " + itemType + " found after 10 tries.. wandering the bot before resuming farming", err)
-            wanderTheBot().catch((err) => {
-              console.error("Farmer: Failed to move the bot to find more " + itemType + "... stopping farming routine completely", err)
-              farmingInProgress = false
-            })
+            console.error("Farmer: No " + itemType + " found after 10 tries... stopping farming routine completely")
+            farmingInProgress = false
           }
         })
       }
@@ -567,35 +572,35 @@ function configureBot(bot) {
         }
         console.log('Moving to block to dig it')
         bot.pathfinder.goto(new GoalLookAtBlock(rayBlock.position, bot.world, {reach: 4}))
-          .then( () => {
-            const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(rayBlock.position))
-            if (bestHarvestTool) {
-             // bot.equip(bestHarvestTool, 'hand')
-            }
-            console.log("Got to the block amd the right tool, now to dig it")
-            bot.dig(bot.blockAt(rayBlock.position), true, 'raycast')
-                .then(() => {
-                  console.log('I dug up a ' + blockName)
-                  if (username) {
-                    bot.whisper(username, 'I dug up a ' + blockName)
-                  }
-                  resolve()
-                })
-                .catch(err => {
-                  console.error('ERROR, I had problem trying to dig ' + blockName, err)
-                  if (username) {
-                    bot.whisper(username, 'ERROR, I had problem trying to dig ' + blockName)
-                  }
-                  reject(new Error("Couldn't get to or dig block"))
-                })
-          })
-          .catch((err) => {
-            console.error('ERROR, I had pathfinding problem trying to dig ' + blockName, err)
-            if (username) {
-              bot.whisper(username, 'ERROR, I had pathfinding problem trying to dig ' + blockName)
-            }
-            reject(new Error("Couldn't get to or dig block"))
-          })
+            .then( () => {
+              const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(rayBlock.position))
+              if (bestHarvestTool) {
+                // bot.equip(bestHarvestTool, 'hand')
+              }
+              console.log("Got to the block amd the right tool, now to dig it")
+              bot.dig(bot.blockAt(rayBlock.position), true, 'raycast')
+                  .then(() => {
+                    console.log('I dug up a ' + blockName)
+                    if (username) {
+                      bot.whisper(username, 'I dug up a ' + blockName)
+                    }
+                    resolve()
+                  })
+                  .catch(err => {
+                    console.error('ERROR, I had problem trying to dig ' + blockName, err)
+                    if (username) {
+                      bot.whisper(username, 'ERROR, I had problem trying to dig ' + blockName)
+                    }
+                    reject(new Error("Couldn't get to or dig block"))
+                  })
+            })
+            .catch((err) => {
+              console.error('ERROR, I had pathfinding problem trying to dig ' + blockName, err)
+              if (username) {
+                bot.whisper(username, 'ERROR, I had pathfinding problem trying to dig ' + blockName)
+              }
+              reject(new Error("Couldn't get to or dig block"))
+            })
       })
     } else {
       return new Promise(function (resolve, reject) {
