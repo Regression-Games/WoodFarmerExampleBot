@@ -320,7 +320,7 @@ function configureBot(bot) {
         })
         if (target) {
           console.log("Farmer: DeliveryRun: Trying to deliver " + itemType + " to: " + target[1].entity.username)
-          comeToPlayer(target[1].entity.username, 3).then(async () => {
+          comeToPlayer(target[1].entity.username, 2).then(async () => {
             await bot.lookAt(target[1].entity.position).catch((err) => {
               console.error("Failed to look at player position", err)
             })
