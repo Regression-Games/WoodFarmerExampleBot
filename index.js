@@ -61,6 +61,12 @@ function configureBot(bot) {
    * @returns {Promise<void>}
    */
   function wanderTheBot(minRange=10, maxRange=10) {
+    if (minRange < 1) {
+      minRange = 1;
+    }
+    if (maxRange < minRange) {
+      maxRange = minRange;
+    }
     let xRange = (minRange + (Math.random()*(maxRange-minRange))) * (Math.random() < 0.5 ? -1 : 1);
     let zRange = (minRange + (Math.random()*(maxRange-minRange))) * (Math.random() < 0.5 ? -1 : 1);
     let newX = bot.entity.position.x + xRange;
@@ -314,15 +320,18 @@ function configureBot(bot) {
         })
         if (target) {
           console.log("Farmer: DeliveryRun: Trying to deliver " + itemType + " to: " + target[1].entity.username)
-          comeToPlayer(target[1].entity.username, 4).then(() => {
-            dropInventoryItem(target[1].entity.username, itemType).then( () => {
+          comeToPlayer(target[1].entity.username, 3).then(async () => {
+            await bot.lookAt(target[1].entity.position).catch((err) => {
+              console.error("Failed to look at player position", err)
+            })
+            dropInventoryItem(target[1].entity.username, itemType).then(() => {
               console.log("Farmer: DeliveryRun: Made a delivery to: " + target[1].entity.username + ".. going back to farming")
               farmingDeliveryRun = false;
               // inside promise... need to run again
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold)
               }, 0);
-            }).catch( (err) => {
+            }).catch((err) => {
               if (failureCount < 10) {
                 console.log("Farmer: DeliveryRun: Failed to make a delivery at my target, trying again soon")
                 setTimeout(() => {
@@ -339,12 +348,12 @@ function configureBot(bot) {
             })
           }).catch( (err) => {
             if (failureCount < 10) {
-              console.log("Farmer: DeliveryRun: Didn't make it to my delivery target, trying again soon")
+              console.error("Farmer: DeliveryRun: Didn't make it to my delivery target, trying again soon", err)
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
               }, 100);
             } else {
-              console.log("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming")
+              console.error("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming", err)
               farmingDeliveryRun = false;
               // inside promise... need to run again
               setTimeout(() => {
@@ -372,7 +381,10 @@ function configureBot(bot) {
           }
           let quantityAvailable = 0;
           let thingsInInventory = bot.inventory.items().filter((item) => {
-            if (item.name && item.name.toLowerCase().includes(itemType) || (item.displayName && item.displayName.toLowerCase().includes(itemType))) {
+            let isAxe = itemType.toLowerCase().includes('axe');
+            let itemNameMatches = (item.name && item.name.toLowerCase().includes(itemType.toLowerCase()) && (isAxe || !item.name.toLowerCase().includes('axe')));
+            let displayNameMatches = (item.displayName && item.displayName.toLowerCase().includes(itemType.toLowerCase()) && (isAxe || !item.displayName.toLowerCase().includes('axe')));
+            if (itemNameMatches || displayNameMatches) {
               quantityAvailable += item.count
               return true;
             }
@@ -390,7 +402,7 @@ function configureBot(bot) {
         }).catch( (err) => {
           if (failureCount < 5) {
             console.error("Farmer: No " + itemType + " found, wandering the bot before resuming farming", err)
-            wanderTheBot(10,20).then( () => {
+            wanderTheBot(failureCount+1,(failureCount+1)*2).then( () => {
               console.log('Farmer: Finished wandering... retrying farming')
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold)
@@ -467,7 +479,11 @@ function configureBot(bot) {
   function dropInventoryItem(username, itemName, quantity= -1) {
     let quantityAvailable = 0;
     let itemsToDrop = bot.inventory.items().filter((item) => {
-      if((item.name && item.name.toLowerCase().includes(itemName.toLowerCase())) || (item.displayName && item.displayName.toLowerCase().includes(itemName.toLowerCase()))) {
+      // don't drop an 'axe' unless it has explicitly requested.. this prevents the bot from dropping stone tools when dropping stone
+      let isAxe = itemName.toLowerCase().includes('axe');
+      let itemNameMatches = (item.name && item.name.toLowerCase().includes(itemName.toLowerCase()) && (isAxe || !item.name.toLowerCase().includes('axe')));
+      let displayNameMatches = (item.displayName && item.displayName.toLowerCase().includes(itemName.toLowerCase()) && (isAxe || !item.displayName.toLowerCase().includes('axe')));
+      if(itemNameMatches || displayNameMatches) {
         quantityAvailable += item.count
         return true;
       }
