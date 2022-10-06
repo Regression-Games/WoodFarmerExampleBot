@@ -457,12 +457,16 @@ function configureBot(bot) {
    */
   function pickupItem(item) {
     console.log('Going to pickup item - ' + (item.displayName || item.name))
-    if (item) {
-      return bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
-    } else {
-      return new Promise( function(resolve, reject) {
-        reject( new Error("No item"))
-      })
+    try {
+      if (item) {
+        return bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
+      } else {
+        return new Promise(function (resolve, reject) {
+          reject(new Error("No item"))
+        })
+      }
+    } catch( err) {
+      console.error('Error while trying to set off on my journey to pickup the Item', err)
     }
   }
 
