@@ -314,15 +314,18 @@ function configureBot(bot) {
         })
         if (target) {
           console.log("Farmer: DeliveryRun: Trying to deliver " + itemType + " to: " + target[1].entity.username)
-          comeToPlayer(target[1].entity.username, 4).then(() => {
-            dropInventoryItem(target[1].entity.username, itemType).then( () => {
+          comeToPlayer(target[1].entity.username, 3).then(async () => {
+            await bot.pathfinder.lookAt(target[1].entity.position).catch((err) => {
+              console.error("Failed to look at player position", err)
+            })
+            dropInventoryItem(target[1].entity.username, itemType).then(() => {
               console.log("Farmer: DeliveryRun: Made a delivery to: " + target[1].entity.username + ".. going back to farming")
               farmingDeliveryRun = false;
               // inside promise... need to run again
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold)
               }, 0);
-            }).catch( (err) => {
+            }).catch((err) => {
               if (failureCount < 10) {
                 console.log("Farmer: DeliveryRun: Failed to make a delivery at my target, trying again soon")
                 setTimeout(() => {
