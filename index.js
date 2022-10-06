@@ -567,12 +567,18 @@ function configureBot(bot) {
       bot.pathfinder.setMovements(defaultMove)
 
       return new Promise(function (resolve, reject) {
-        const rayBlock = rayTraceEntitySight(theBlock)
-        if (!rayBlock) {
-          console.log('Block is out of reach - ' + blockName)
-          bot.whisper(username, 'Block is out of reach - ' + blockName)
-          reject(new Error('Block is out of reach'))
+        console.log('Raytracing to make sure I can see the block - ' + blockName)
+        try {
+          const rayBlock = rayTraceEntitySight(theBlock)
+          if (!rayBlock) {
+            console.log('Block is out of reach - ' + blockName)
+            bot.whisper(username, 'Block is out of reach - ' + blockName)
+            reject(new Error('Block is out of reach'))
+          }
+        } catch (error) {
+          console.error('Failed to raycast check the block', error)
         }
+
         console.log('Moving to block to dig it')
         bot.pathfinder.goto(new GoalLookAtBlock(rayBlock.position, bot.world, {reach: 4}))
             .then( async () => {
