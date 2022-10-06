@@ -551,7 +551,7 @@ function configureBot(bot) {
       bot.pathfinder.setMovements(defaultMove)
 
       return new Promise(function(resolve,reject) {
-        bot.pathfinder.goto(new GoalLookAtBlock(new Vec3(pos.x, pos.y, pos.z), bot.world)).then(() => {
+        bot.pathfinder.goto(new GoalLookAtBlock(new Vec3(pos.x, pos.y, pos.z), bot.world, {reach:3})).then(() => {
           console.log("Got to the block, now to dig it")
           bot.dig(theBlock)
               .then(() => {
@@ -584,7 +584,7 @@ function configureBot(bot) {
     }
   }
 
-  function findBlock(username, blockType, onlyTakeTopBlocks=false, maxDistance = 30) {
+  function findBlock(username, blockType, onlyTakeTopBlocks=false, maxDistance = 50) {
     console.log("Finding block of type: " + blockType)
     let theBlocks = bot.findBlocks({
       point: bot.entity.position,
@@ -611,7 +611,8 @@ function configureBot(bot) {
           return !blockAbove || blockAbove.type === 0
         }
         return true;
-      }
+      },
+      count: 10, // return up to N options.. thus allowing us to randomly pick one and avoid sticking on the 1 block we can't get
     })
     // always picking the closest block seemed smart, until that block wasn't pathable and we needed to get something else, so now we do this randomly
     let randomIndexInTheList = Math.round(Math.random()*(theBlocks.length-1));
@@ -626,7 +627,7 @@ function configureBot(bot) {
     return theBlock
   }
 
-  function findAndDigBlock(username, blockType, onlyTakeTopBlocks=false, maxDistance = 30) {
+  function findAndDigBlock(username, blockType, onlyTakeTopBlocks=false, maxDistance = 50) {
     return digBlock(username, blockType, findBlock(username, blockType,onlyTakeTopBlocks, maxDistance))
   }
 
