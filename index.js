@@ -647,7 +647,7 @@ function configureBot(bot) {
   }
 
   function findAndDigBlock(username, blockType, onlyTakeTopBlocks=false, maxDistance = 50) {
-    return digBlock(username, blockType, findBlocks(username, blockType,onlyTakeTopBlocks, maxDistance))
+    return digBlock(username, blockType, findBlock(username, blockType,onlyTakeTopBlocks, maxDistance))
   }
 
   function findAndAttackTarget(username, targetType) {
