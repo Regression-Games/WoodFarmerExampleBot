@@ -342,12 +342,12 @@ function configureBot(bot) {
             })
           }).catch( (err) => {
             if (failureCount < 10) {
-              console.log("Farmer: DeliveryRun: Didn't make it to my delivery target, trying again soon")
+              console.error("Farmer: DeliveryRun: Didn't make it to my delivery target, trying again soon", err)
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
               }, 100);
             } else {
-              console.log("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming")
+              console.error("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming", err)
               farmingDeliveryRun = false;
               // inside promise... need to run again
               setTimeout(() => {
