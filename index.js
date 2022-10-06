@@ -567,6 +567,7 @@ function configureBot(bot) {
       bot.pathfinder.setMovements(defaultMove)
 
       return new Promise(function (resolve, reject) {
+        
         console.log('Raytracing to make sure I can see the block - ' + blockName)
         try {
           const rayBlock = rayTraceEntitySight(theBlock)
