@@ -410,10 +410,12 @@ function configureBot(bot) {
     console.log("Looking for item " + itemName + " in range " + range)
     return bot.nearestEntity((entity) => {
       if( entity.type === "object" && entity.objectType === "Item" && entity.onGround) {
-        console.log("Evaluating: " + entity.name + "-" + entity.displayName + " at (" + entity.position.x + "," + entity.position.y + "," + entity.position.z + ") - metadata: " + JSON.stringify(entity.metadata))
+        console.log("Evaluating: " + entity.name + "-" + entity.displayName + " - id: " + entity.id + " at (" + entity.position.x + "," + entity.position.y + "," + entity.position.z + ") - metadata: " + JSON.stringify(entity.metadata))
         try {
-          let theItem = mineflayer.Item.fromNotch(entity.metadata)
-          console.log("Item Info: " + (theItem.displayName || theItem.name))
+          //let theItem = mcData.entities
+          // = mineflayer.Item.fromNotch(entity.metadata)
+          //console.log("Item Info: " + (theItem.displayName || theItem.name))
+          //console.log("Item Info: " + (theItem.displayName || theItem.name))
         } catch (err) {
           console.error("Couldn't convert item from notch data", err)
         }
