@@ -15,7 +15,6 @@ function configureBot(bot) {
   const defaultMove = new Movements(bot, mcData)
 
   let keepAttacking = true;
-  let lastBlockAttempted = undefined
 
   let lastFarmedType = undefined;
   let farmingInProgress = false;
@@ -274,7 +273,6 @@ function configureBot(bot) {
     }, 10);
 
     keepAttacking = false;
-    lastBlockAttempted = undefined;
     lastFarmedType = undefined;
     farmingInProgress = false;
     farmingDeliveryRun = false;
@@ -286,7 +284,6 @@ function configureBot(bot) {
     bot.pathfinder.stop()
     bot.pathfinder.setGoal(null)
     keepAttacking = false;
-    lastBlockAttempted = undefined;
     lastFarmedType = undefined;
     farmingInProgress = false;
     farmingDeliveryRun = false;
@@ -542,41 +539,64 @@ function configureBot(bot) {
     bot.pathfinder.setGoal(new GoalInvert(new GoalFollow(target, range)), true)
   }
 
+  const rayTraceEntitySight = function (entity) {
+    if (bot.world?.raycast) {
+      const { height, position, yaw, pitch } = entity
+      const x = -Math.sin(yaw) * Math.cos(pitch)
+      const y = Math.sin(pitch)
+      const z = -Math.cos(yaw) * Math.cos(pitch)
+      const rayBlock = bot.world.raycast(position.offset(0, height, 0), new Vec3(x, y, z), 120)
+      if (rayBlock) {
+        return rayBlock
+      }
+    } else {
+      throw Error('bot.world.raycast does not exists. Try updating prismarine-world.')
+    }
+  }
+
   function digBlock(username, blockType, theBlock) {
     if (theBlock) {
-      console.log('YES, I will dig - ' + theBlock.displayName || theBlock.name)
+      const blockName = theBlock.displayName || theBlock.name;
+      console.log('YES, I will dig - ' + blockName)
       if (username) {
-        bot.whisper(username, 'YES, I will dig - ' + theBlock.displayName || theBlock.name)
+        bot.whisper(username, 'YES, I will dig - ' + blockName)
       }
-      lastBlockAttempted = theBlock;
       let pos = theBlock.position;
       bot.pathfinder.setMovements(defaultMove)
 
-      return new Promise(function(resolve,reject) {
-        bot.pathfinder.goto(new GoalLookAtBlock(new Vec3(pos.x, pos.y, pos.z), bot.world, {reach:3})).then(() => {
-          console.log("Got to the block, now to dig it")
-          bot.dig(theBlock)
+      return new Promise(async function (resolve, reject) {
+        try {
+          const rayBlock = rayTraceEntitySight(theBlock)
+          if (!rayBlock) {
+            bot.chat('Block is out of reach')
+            return
+          }
+          await bot.pathfinder.goto(new GoalLookAtBlock(rayBlock.position, bot.world, {reach: 4}))
+          const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(rayBlock.position))
+          if (bestHarvestTool) await bot.equip(bestHarvestTool, 'hand')
+          console.log("Got to the block amd the right tool, now to dig it")
+          await bot.dig(bot.blockAt(rayBlock.position), true, 'raycast')
               .then(() => {
-                console.log('I dug up a ' + (theBlock.displayName || theBlock.name))
+                console.log('I dug up a ' + blockName)
                 if (username) {
-                  bot.whisper(username, 'I dug up a ' + (theBlock.displayName || theBlock.name))
+                  bot.whisper(username, 'I dug up a ' + blockName)
                 }
                 resolve()
               })
               .catch(err => {
-                console.error('ERROR, I had problem trying to dig ' + theBlock.displayName || theBlock.name, err)
+                console.error('ERROR, I had problem trying to dig ' + blockName, err)
                 if (username) {
-                  bot.whisper(username, 'ERROR, I had problem trying to dig ' + theBlock.displayName || theBlock.name)
+                  bot.whisper(username, 'ERROR, I had problem trying to dig ' + blockName)
                 }
                 reject(new Error("Couldn't get to or dig block"))
               })
-        }, (err) => {
-          console.error('ERROR, I had pathfinding problem trying to dig ' + theBlock.displayName || theBlock.name, err)
+        } catch (e) {
+          console.error('ERROR, I had pathfinding problem trying to dig ' + blockName, err)
           if (username) {
-            bot.whisper(username, 'ERROR, I had pathfinding problem trying to dig ' + theBlock.displayName || theBlock.name)
+            bot.whisper(username, 'ERROR, I had pathfinding problem trying to dig ' + blockName)
           }
           reject(new Error("Couldn't get to or dig block"))
-        })
+        }
       })
     } else {
       return new Promise(function (resolve, reject) {
@@ -614,13 +634,10 @@ function configureBot(bot) {
         }
         return true;
       },
-      count: 10, // return up to N options.. thus allowing us to randomly pick one and avoid sticking on the 1 block we can't get
+      count: 10, // return up to N options... thus allowing us to pick the easiest to get to
     })
-    // always picking the closest block seemed smart, until that block wasn't pathable and we needed to get something else, so now we do this randomly
-    let randomIndexInTheList = Math.round(Math.random()*(theBlocks.length-1));
-    console.log('Trying to use found block at index: ' + randomIndexInTheList + ' from list size: ' + theBlocks.length)
-    let theBlock = randomIndexInTheList>=0?bot.blockAt(theBlocks[randomIndexInTheList]):undefined;
-    if (!theBlock) {
+
+    if (!theBlocks || theBlocks.length == 0) {
       console.log('I did not find any ' + blockType + ' in range: ' + maxDistance)
       if (username) {
         bot.whisper(username, 'I did not find any ' + blockType + ' in range: ' + maxDistance)
@@ -630,7 +647,7 @@ function configureBot(bot) {
   }
 
   function findAndDigBlock(username, blockType, onlyTakeTopBlocks=false, maxDistance = 50) {
-    return digBlock(username, blockType, findBlock(username, blockType,onlyTakeTopBlocks, maxDistance))
+    return digBlock(username, blockType, findBlocks(username, blockType,onlyTakeTopBlocks, maxDistance))
   }
 
   function findAndAttackTarget(username, targetType) {
