@@ -61,6 +61,12 @@ function configureBot(bot) {
    * @returns {Promise<void>}
    */
   function wanderTheBot(minRange=10, maxRange=10) {
+    if (minRange < 1) {
+      minRange = 1;
+    }
+    if (maxRange < minRange) {
+      maxRange = minRange;
+    }
     let xRange = (minRange + (Math.random()*(maxRange-minRange))) * (Math.random() < 0.5 ? -1 : 1);
     let zRange = (minRange + (Math.random()*(maxRange-minRange))) * (Math.random() < 0.5 ? -1 : 1);
     let newX = bot.entity.position.x + xRange;
@@ -396,7 +402,7 @@ function configureBot(bot) {
         }).catch( (err) => {
           if (failureCount < 5) {
             console.error("Farmer: No " + itemType + " found, wandering the bot before resuming farming", err)
-            wanderTheBot(10,20).then( () => {
+            wanderTheBot(failureCount+1,(failureCount+1)*2).then( () => {
               console.log('Farmer: Finished wandering... retrying farming')
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold)
