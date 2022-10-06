@@ -569,9 +569,9 @@ function configureBot(bot) {
 
       return new Promise(function (resolve, reject) {
         console.log('Moving to block to dig it')
-        bot.pathfinder.goto(new GoalLookAtBlock(rayBlock.position, bot.world, {reach: 4}))
+        bot.pathfinder.goto(new GoalLookAtBlock(theBlock.position, bot.world, {reach: 4}))
             .then( async () => {
-              const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(rayBlock.position))
+              const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(theBlock.position))
               if (bestHarvestTool) {
                 await bot.equip(bestHarvestTool, 'hand')
               }
