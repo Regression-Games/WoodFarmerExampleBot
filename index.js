@@ -48,8 +48,10 @@ function configureBot(bot) {
       // TODO: If still stuck after 5 ? Do we want to just respawn... b/c we're stuck stuck... or call for help / guide our player to us
       if (++stuckCount > 5) {
         stuckCount = 0;
-        console.log("Stuck bot: Hard Stopping")
-        hardStopBot();
+        console.log("Stuck bot: Stopping digging and pathfinding for a sec")
+        bot.stopDigging();
+        bot.pathfinder.stop()
+        bot.pathfinder.setGoal(null)
         console.log("Stuck bot: Trying to move to get unstuck")
         wanderTheBot().catch((err) => {
           console.error("Stuck bot: Reloading ", err)
