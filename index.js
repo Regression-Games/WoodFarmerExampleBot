@@ -570,7 +570,7 @@ function configureBot(bot) {
           .then( () => {
             const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(rayBlock.position))
             if (bestHarvestTool) {
-              await bot.equip(bestHarvestTool, 'hand')
+             // bot.equip(bestHarvestTool, 'hand')
             }
             console.log("Got to the block amd the right tool, now to dig it")
             bot.dig(bot.blockAt(rayBlock.position), true, 'raycast')
