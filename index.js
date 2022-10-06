@@ -315,7 +315,7 @@ function configureBot(bot) {
         if (target) {
           console.log("Farmer: DeliveryRun: Trying to deliver " + itemType + " to: " + target[1].entity.username)
           comeToPlayer(target[1].entity.username, 3).then(async () => {
-            await bot.pathfinder.lookAt(target[1].entity.position).catch((err) => {
+            await bot.lookAt(target[1].entity.position).catch((err) => {
               console.error("Failed to look at player position", err)
             })
             dropInventoryItem(target[1].entity.username, itemType).then(() => {
