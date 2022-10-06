@@ -360,7 +360,7 @@ function configureBot(bot) {
 
       // cut more
       if (!farmingDeliveryRun) {
-        findAndDigBlock(undefined, itemType, false, 50).then(  () => {
+        findAndDigBlock(undefined, itemType, false, 50).then( () => {
           console.log("Farmer: Dug a " + itemType)
           lastFarmedType = itemType;
           let quantityAvailable = 0;
@@ -389,7 +389,7 @@ function configureBot(bot) {
                 farmerRoutine(itemType, deliveryThreshold)
               }, 0);
             }).catch((err) => {
-              console.error("Farmer: Failed to wander the bot... retrying farming")
+              console.error("Farmer: Failed to wander the bot... retrying farming", err)
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
               }, 100);
@@ -567,15 +567,16 @@ function configureBot(bot) {
       return new Promise(function (resolve, reject) {
         const rayBlock = rayTraceEntitySight(theBlock)
         if (!rayBlock) {
-          bot.chat('Block is out of reach')
-          return
+          console.log('Block is out of reach - ' + blockName)
+          bot.whisper(username, 'Block is out of reach - ' + blockName)
+          reject(new Error('Block is out of reach'))
         }
         console.log('Moving to block to dig it')
         bot.pathfinder.goto(new GoalLookAtBlock(rayBlock.position, bot.world, {reach: 4}))
-            .then( () => {
+            .then( async () => {
               const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(rayBlock.position))
               if (bestHarvestTool) {
-                // bot.equip(bestHarvestTool, 'hand')
+                await bot.equip(bestHarvestTool, 'hand')
               }
               console.log("Got to the block amd the right tool, now to dig it")
               bot.dig(bot.blockAt(rayBlock.position), true, 'raycast')
