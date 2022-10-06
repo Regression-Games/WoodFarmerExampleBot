@@ -2,7 +2,7 @@ const { mineflayer } = require('mineflayer')
 const { pathfinder, Movements } = require('mineflayer-pathfinder')
 const { GoalNear, GoalBlock, GoalGetToBlock, GoalLookAtBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
 const { Vec3 } = require('vec3');
-const { Item } = require('prismarine-item');
+const Item = require('prismarine-item');
 
 /**
  * Mineflayer API docs - https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md
