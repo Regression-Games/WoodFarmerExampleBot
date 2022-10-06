@@ -62,12 +62,14 @@ function configureBot(bot) {
 
 
   /**
-   * Randomly wanders the bot -50->50 X and -50->50 Z from the current position
+   * Randomly wanders the bot minRange->maxRange X and minRange->maxRange Z from the current position
    * @returns {Promise<void>}
    */
-  function wanderTheBot() {
-    let newX = bot.entity.position.x+(Math.random()*100-50);
-    let newZ = bot.entity.position.z+(Math.random()*100-50);
+  function wanderTheBot(minRange=50, maxRange=50) {
+    let xRange = (minRange + (Math.random()*(maxRange-minRange))) * (Math.random() < 0.5 ? -1 : 1);
+    let zRange = (minRange + (Math.random()*(maxRange-minRange))) * (Math.random() < 0.5 ? -1 : 1);
+    let newX = bot.entity.position.x + xRange;
+    let newZ = bot.entity.position.z + zRange;
     return bot.pathfinder.goto(new GoalXZ(newX, newZ))
   }
 
