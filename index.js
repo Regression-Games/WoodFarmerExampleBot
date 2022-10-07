@@ -503,19 +503,24 @@ function configureBot(bot) {
       let quantityToDrop = (quantity<0?quantityAvailable:quantity);
       console.log('YES, I will drop ' + quantityToDrop + ' ' + itemName)
       bot.whisper(username, 'YES, I will drop ' + quantityToDrop + ' ' + itemName)
-      return new Promise(function(resolve,reject) {
-        let i = 0;
-        while (quantityToDrop > 0 && i < itemsToDrop.length) {
-          let theItem = itemsToDrop[i];
-          let qty = (theItem.count > quantityToDrop ? quantityToDrop : theItem.count);
-          bot.toss(theItem.type, theItem.metadata, qty).catch((err) => {});
-          quantityToDrop -= qty;
-          ++i;
-        }
-        if( quantityToDrop <= 0 ) {
-          resolve()
-        } else {
-          reject(new Error('I dropped some, but didn\'t have ' + (quantity>0?quantity:'') + ' ' + itemName + ' to drop'))
+      return new Promise(async function (resolve, reject) {
+        try {
+          let i = 0;
+          while (quantityToDrop > 0 && i < itemsToDrop.length) {
+            let theItem = itemsToDrop[i];
+            let qty = (theItem.count > quantityToDrop ? quantityToDrop : theItem.count);
+            await bot.toss(theItem.type, theItem.metadata, qty)
+            quantityToDrop -= qty;
+            ++i;
+          }
+          if (quantityToDrop <= 0) {
+            resolve()
+          } else {
+            reject(new Error('I dropped some, but didn\'t have ' + (quantity > 0 ? quantity : '') + ' ' + itemName + ' to drop'))
+          }
+        } catch (err) {
+          console.log('I had an error delivering the goods', err)
+          reject(new Error('I had an error delivering the goods'))
         }
       })
     }
@@ -604,30 +609,29 @@ function configureBot(bot) {
         try {
           bot.pathfinder.goto(new GoalLookAtBlock(theBlock.position, bot.world, {reach: 4}))
               .then(async () => {
-                const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(theBlock.position))
-                if (bestHarvestTool) {
-                  try {
-                    await bot.equip(bestHarvestTool, 'hand')
-                  } catch(err) {
-                    console.err('Unable to equip a better tool', err)
+                try {
+                  const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(theBlock.position))
+                  if (bestHarvestTool) {
+                    try {
+                      await bot.equip(bestHarvestTool, 'hand')
+                    } catch (err) {
+                      console.error('Unable to equip a better tool', err)
+                    }
                   }
+                  console.log("Got to the block and the right tool, now to dig it")
+                  await bot.dig(bot.blockAt(theBlock.position))
+                  console.log('I dug up a ' + blockName)
+                  if (username) {
+                    bot.whisper(username, 'I dug up a ' + blockName)
+                  }
+                  resolve()
+                } catch(err) {
+                  console.error('ERROR, I had problem trying to dig ' + blockName, err)
+                  if (username) {
+                    bot.whisper(username, 'ERROR, I had problem trying to dig ' + blockName)
+                  }
+                  reject(new Error("Couldn't get to or dig block"))
                 }
-                console.log("Got to the block and the right tool, now to dig it")
-                bot.dig(bot.blockAt(theBlock.position))
-                    .then(() => {
-                      console.log('I dug up a ' + blockName)
-                      if (username) {
-                        bot.whisper(username, 'I dug up a ' + blockName)
-                      }
-                      resolve()
-                    })
-                    .catch(err => {
-                      console.error('ERROR, I had problem trying to dig ' + blockName, err)
-                      if (username) {
-                        bot.whisper(username, 'ERROR, I had problem trying to dig ' + blockName)
-                      }
-                      reject(new Error("Couldn't get to or dig block"))
-                    })
               })
               .catch((err) => {
                 console.error('ERROR, I had pathfinding problem trying to dig ' + blockName, err)
