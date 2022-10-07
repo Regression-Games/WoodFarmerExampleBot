@@ -325,10 +325,6 @@ function configureBot(bot) {
             await dropInventoryItem(target[1].entity.username, itemType).then(() => {
               console.log("Farmer: DeliveryRun: Made a delivery to: " + target[1].entity.username + ".. going back to farming")
               farmingDeliveryRun = false;
-              // inside promise... need to run again
-              setTimeout(() => {
-                farmerRoutine(itemType, deliveryThreshold)
-              }, 10);
             }).catch((err) => {
               if (failureCount < 10) {
                 console.log("Farmer: DeliveryRun: Failed to make a delivery at my target, trying again soon")
@@ -338,10 +334,6 @@ function configureBot(bot) {
               } else {
                 console.log("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming")
                 farmingDeliveryRun = false;
-                // inside promise... need to run again
-                setTimeout(() => {
-                  farmerRoutine(itemType, deliveryThreshold)
-                }, 10);
               }
             })
           }).catch((err) => {
@@ -353,16 +345,11 @@ function configureBot(bot) {
             } else {
               console.error("Farmer: DeliveryRun: No target player available for delivery after 20 tries.. going back to farming", err)
               farmingDeliveryRun = false;
-              // inside promise... need to run again
-              setTimeout(() => {
-                farmerRoutine(itemType, deliveryThreshold)
-              }, 10);
             }
           })
         } else {
           console.log("Farmer: DeliveryRun: No player available for delivery.. going back to farming")
           farmingDeliveryRun = false;
-          // not in a promise, no setTimeout
         }
       }
 
@@ -416,6 +403,9 @@ function configureBot(bot) {
               })
             } catch (err) {
               console.error('Farmer: Error while trying to wander the bot to farm again', err)
+              setTimeout(() => {
+                farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
+              }, 100);
             }
           } else {
             console.error("Farmer: No " + itemType + " found after 20 tries... stopping farming routine completely")
