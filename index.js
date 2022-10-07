@@ -27,6 +27,7 @@ function configureBot(bot) {
     farmingInProgress = true;
     farmingDeliveryRun = false;
     bot.settings.viewDistance = 'far';
+    bot.pathfinder.setMovements(defaultMove)
     farmerRoutine(lastFarmedType || 'log')
   })
 
@@ -143,18 +144,15 @@ function configureBot(bot) {
         const y = parseInt(cmd[2], 10)
         const z = parseInt(cmd[3], 10)
 
-        bot.pathfinder.setMovements(defaultMove)
         bot.pathfinder.setGoal(new GoalBlock(x, y, z))
       } else if (cmd.length === 3) { // goto x z
         const x = parseInt(cmd[1], 10)
         const z = parseInt(cmd[2], 10)
 
-        bot.pathfinder.setMovements(defaultMove)
         bot.pathfinder.setGoal(new GoalXZ(x, z))
       } else if (cmd.length === 2) { // goto y
         const y = parseInt(cmd[1], 10)
 
-        bot.pathfinder.setMovements(defaultMove)
         bot.pathfinder.setGoal(new GoalY(y))
       }
     } else if (message.startsWith('follow')) {
@@ -546,7 +544,6 @@ function configureBot(bot) {
     console.log('YES, I will come to ' + range + ' away from: ' + username)
     bot.whisper(username, 'YES, I will come to ' + range + ' away from you')
 
-    bot.pathfinder.setMovements(defaultMove)
     return bot.pathfinder.goto(new GoalNear(p.x, p.y, p.z, range))
   }
 
@@ -560,7 +557,6 @@ function configureBot(bot) {
     console.log('YES, I will follow at ' + range + ' away from: ' + username)
     bot.whisper(username, 'YES, I will follow at ' + range + ' away from you')
 
-    bot.pathfinder.setMovements(defaultMove)
     bot.pathfinder.setGoal(new GoalFollow(target, range), true)
   }
 
@@ -574,7 +570,6 @@ function configureBot(bot) {
     console.log('YES, I will stay at least ' + range + ' away from: ' + username)
     bot.whisper(username, 'YES, I will stay at least ' + range + ' away from you')
 
-    bot.pathfinder.setMovements(defaultMove)
     bot.pathfinder.setGoal(new GoalInvert(new GoalFollow(target, range)), true)
   }
 
@@ -601,8 +596,6 @@ function configureBot(bot) {
       if (username) {
         bot.whisper(username, 'YES, I will dig - ' + blockName)
       }
-
-      bot.pathfinder.setMovements(defaultMove)
 
       return new Promise(function (resolve, reject) {
         console.log('Moving to block to dig it')
@@ -725,7 +718,6 @@ function configureBot(bot) {
               bot.attack(entity, true);
             } else {
               if (!goalSet) {
-                bot.pathfinder.setMovements(defaultMove)
                 bot.pathfinder.setGoal(new GoalFollow(entity, 1), true);
                 goalSet = true;
               }
@@ -735,7 +727,6 @@ function configureBot(bot) {
             if (username) {
               bot.whisper(username, 'My target died ... finding a new target')
             }
-            bot.pathfinder.setMovements(defaultMove)
             bot.pathfinder.stop()
             bot.pathfinder.setGoal(null)
             findAndAttackTarget(username, targetType)
