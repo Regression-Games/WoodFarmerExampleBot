@@ -328,7 +328,7 @@ function configureBot(bot) {
               // inside promise... need to run again
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold)
-              }, 0);
+              }, 10);
             }).catch((err) => {
               if (failureCount < 10) {
                 console.log("Farmer: DeliveryRun: Failed to make a delivery at my target, trying again soon")
@@ -341,22 +341,22 @@ function configureBot(bot) {
                 // inside promise... need to run again
                 setTimeout(() => {
                   farmerRoutine(itemType, deliveryThreshold)
-                }, 0);
+                }, 10);
               }
             })
           }).catch( (err) => {
-            if (failureCount < 10) {
+            if (failureCount < 20) {
               console.error("Farmer: DeliveryRun: Didn't make it to my delivery target, trying again soon", err)
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
               }, 100);
             } else {
-              console.error("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming", err)
+              console.error("Farmer: DeliveryRun: No target player available for delivery after 20 tries.. going back to farming", err)
               farmingDeliveryRun = false;
               // inside promise... need to run again
               setTimeout(() => {
                 farmerRoutine(itemType, deliveryThreshold)
-              }, 0);
+              }, 10);
             }
           })
         } else {
@@ -398,16 +398,16 @@ function configureBot(bot) {
           }
           setTimeout(() => {
             farmerRoutine(itemType, deliveryThreshold)
-          }, 0);
+          }, 10);
         }).catch( (err) => {
-          if (failureCount < 5) {
+          if (failureCount < 20) {
             console.error("Farmer: No " + itemType + " found, wandering the bot before resuming farming", err)
             try {
               wanderTheBot(failureCount + 1, (failureCount + 1) * 2).then(() => {
                 console.log('Farmer: Finished wandering... retrying farming')
                 setTimeout(() => {
                   farmerRoutine(itemType, deliveryThreshold)
-                }, 0);
+                }, 10);
               }).catch((err) => {
                 console.error("Farmer: Failed to wander the bot... retrying farming", err)
                 setTimeout(() => {
@@ -419,11 +419,12 @@ function configureBot(bot) {
             }
           }
           else {
-            console.error("Farmer: No " + itemType + " found after 10 tries... stopping farming routine completely")
+            console.error("Farmer: No " + itemType + " found after 20 tries... stopping farming routine completely")
             farmingInProgress = false
           }
         })
       }
+      console.log('Farming Routine Pass Ended')
     }
   }
 
