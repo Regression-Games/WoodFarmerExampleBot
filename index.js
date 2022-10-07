@@ -461,8 +461,8 @@ function configureBot(bot) {
     console.log('Going to pickup item - ' + (item.displayName || item.name))
     try {
       if (item) {
-        // get withing 3/4 of a block.. you can't be exact b/c sometimes the item has coordinates that are in the block its sitting on and the bot can't put his feet there
-        return bot.pathfinder.goto(new GoalNear(item.position.x, item.position.y, item.position.z, 0.75))
+        // get within 1 block.. you can't be exact b/c sometimes the item has coordinates that are in the block its sitting on and the bot can't put his feet there
+        return bot.pathfinder.goto(new GoalNear(item.position.x, item.position.y, item.position.z, 1))
       } else {
         return new Promise(function (resolve, reject) {
           reject(new Error("No item"))
