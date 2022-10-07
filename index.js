@@ -461,8 +461,10 @@ function configureBot(bot) {
     console.log('Going to pickup item - ' + (item.displayName || item.name))
     try {
       if (item) {
+        let gca = new GoalCompositeAny();
+        gca.goals = [new GoalNear(item.position.x, item.position.y, item.position.z, 1), new GoalBlock(item.position.x, item.position.y, item.position.z), new GoalBlock(item.position.x, item.position.y+1, item.position.z)];
         // get within 1 block.. you can't be exact b/c sometimes the item has coordinates that are in the block its sitting on and the bot can't put his feet there
-        return bot.pathfinder.goto(new GoalCompositeAny [new GoalNear(item.position.x, item.position.y, item.position.z, 1), new GoalBlock(item.position.x, item.position.y, item.position.z), new GoalBlock(item.position.x, item.position.y+1, item.position.z)])
+        return bot.pathfinder.goto(gca)
       } else {
         return new Promise(function (resolve, reject) {
           reject(new Error("No item"))
