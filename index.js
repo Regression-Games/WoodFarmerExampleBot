@@ -106,7 +106,7 @@ function configureBot(bot) {
     handleChatOrWhisper(args[0], args[1])
   })
 
-  function handleChatOrWhisper( username, message ) {
+  async function handleChatOrWhisper(username, message) {
     if (username === bot.username || username === 'you') return
 
     if (message === 'reinit') {
@@ -132,9 +132,13 @@ function configureBot(bot) {
         range = cmd[1]
       }
       if (range) {
-        comeToPlayer(username,range).catch((err) => {console.error("Couldn't find: " + username + " in range: " + range, err)})
+        comeToPlayer(username, range).catch((err) => {
+          console.error("Couldn't find: " + username + " in range: " + range, err)
+        })
       } else {
-        comeToPlayer(username).catch((err) => {console.error("Couldn't find: " + username, err)})
+        comeToPlayer(username).catch((err) => {
+          console.error("Couldn't find: " + username, err)
+        })
       }
     } else if (message.startsWith('goto')) {
       const cmd = message.split(' ')
@@ -163,7 +167,7 @@ function configureBot(bot) {
         console.log('range: ' + range)
       }
       if (range) {
-        followPlayer(username,range)
+        followPlayer(username, range)
       } else {
         followPlayer(username)
       }
@@ -175,7 +179,7 @@ function configureBot(bot) {
         console.log('range: ' + range)
       }
       if (range) {
-        avoidPlayer(username,range)
+        avoidPlayer(username, range)
       } else {
         avoidPlayer(username)
       }
@@ -212,9 +216,13 @@ function configureBot(bot) {
         console.log('dropQuantity: ' + dropQuantity)
       }
       if (dropQuantity) {
-        dropInventoryItem(username, dropThing, dropQuantity).catch((err) => {console.error("Couldn't drop item: " + dropThing, err)})
+        dropInventoryItem(username, dropThing, dropQuantity).catch((err) => {
+          console.error("Couldn't drop item: " + dropThing, err)
+        })
       } else {
-        dropInventoryItem(username, dropThing).catch((err) => {console.error("Couldn't drop item: " + dropThing, err)})
+        dropInventoryItem(username, dropThing).catch((err) => {
+          console.error("Couldn't drop item: " + dropThing, err)
+        })
       }
     } else if (message.startsWith('dig')) {
       stopBot(username)
@@ -223,7 +231,9 @@ function configureBot(bot) {
       if (cmd.length >= 2) { // goto x y z
         blockType = cmd[1]
       }
-      findAndDigBlock(username, blockType).catch((err) => {console.error("Couldn't dig blockType: " + blockType, err)})
+      findAndDigBlock(username, blockType).catch((err) => {
+        console.error("Couldn't dig blockType: " + blockType, err)
+      })
     } else if (message.startsWith('attack')) {
       stopBot(username)
       keepAttacking = true;
@@ -451,10 +461,8 @@ function configureBot(bot) {
     console.log('Going to pickup item - ' + (item.displayName || item.name))
     try {
       if (item) {
-        let gca = new GoalCompositeAny();
-        gca.goals = [new GoalNear(item.position.x, item.position.y, item.position.z, 1), new GoalBlock(item.position.x, item.position.y, item.position.z), new GoalBlock(item.position.x, item.position.y+1, item.position.z)];
         // get within 1 block.. you can't be exact b/c sometimes the item has coordinates that are in the block its sitting on and the bot can't put his feet there
-        return bot.pathfinder.goto(gca)
+        return bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
       } else {
         return new Promise(function (resolve, reject) {
           reject(new Error("No item"))
