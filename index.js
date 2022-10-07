@@ -318,7 +318,7 @@ function configureBot(bot) {
         })
         if (target) {
           console.log("Farmer: DeliveryRun: Trying to deliver " + itemType + " to: " + target[1].entity.username)
-          comeToPlayer(target[1].entity.username, 3).then(async () => {
+          await comeToPlayer(target[1].entity.username, 3).then(async () => {
             await bot.lookAt(target[1].entity.position).catch((err) => {
               console.error("Failed to look at player position", err)
             })
@@ -399,11 +399,11 @@ function configureBot(bot) {
           setTimeout(() => {
             farmerRoutine(itemType, deliveryThreshold)
           }, 10);
-        }).catch((err) => {
+        }).catch(async (err) => {
           if (failureCount < 20) {
             console.error("Farmer: No " + itemType + " found, wandering the bot before resuming farming", err)
             try {
-              wanderTheBot(failureCount + 1, (failureCount + 1) * 2).then(() => {
+              await wanderTheBot(failureCount + 1, (failureCount + 1) * 2).then(() => {
                 console.log('Farmer: Finished wandering... retrying farming')
                 setTimeout(() => {
                   farmerRoutine(itemType, deliveryThreshold)
