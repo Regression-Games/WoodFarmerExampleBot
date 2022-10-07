@@ -299,7 +299,7 @@ function configureBot(bot) {
    * @param itemType
    * @param deliveryThreshold
    */
-  function farmerRoutine(itemType, deliveryThreshold = 10, failureCount = 0) {
+  async function farmerRoutine(itemType, deliveryThreshold = 10, failureCount = 0) {
     console.log("Farmer: farmingInProgress=" + farmingInProgress + " , itemType: " + itemType)
     if (farmingInProgress) {
 
@@ -322,7 +322,7 @@ function configureBot(bot) {
             await bot.lookAt(target[1].entity.position).catch((err) => {
               console.error("Failed to look at player position", err)
             })
-            dropInventoryItem(target[1].entity.username, itemType).then(() => {
+            await dropInventoryItem(target[1].entity.username, itemType).then(() => {
               console.log("Farmer: DeliveryRun: Made a delivery to: " + target[1].entity.username + ".. going back to farming")
               farmingDeliveryRun = false;
               // inside promise... need to run again
@@ -344,7 +344,7 @@ function configureBot(bot) {
                 }, 10);
               }
             })
-          }).catch( (err) => {
+          }).catch((err) => {
             if (failureCount < 20) {
               console.error("Farmer: DeliveryRun: Didn't make it to my delivery target, trying again soon", err)
               setTimeout(() => {
@@ -368,14 +368,14 @@ function configureBot(bot) {
 
       // cut more
       if (!farmingDeliveryRun) {
-        findAndDigBlock(undefined, itemType, false, 50).then( async () => {
+        await findAndDigBlock(undefined, itemType, false, 50).then(async () => {
           console.log("Farmer: Dug a " + itemType)
           lastFarmedType = itemType;
           let itemOnGround = findItemInRange(itemType, 7)
           if (itemOnGround) {
             try {
               await pickupItem(itemOnGround);
-            } catch(err) {
+            } catch (err) {
               console.error('Failed to pickup item', err)
             }
           }
@@ -399,7 +399,7 @@ function configureBot(bot) {
           setTimeout(() => {
             farmerRoutine(itemType, deliveryThreshold)
           }, 10);
-        }).catch( (err) => {
+        }).catch((err) => {
           if (failureCount < 20) {
             console.error("Farmer: No " + itemType + " found, wandering the bot before resuming farming", err)
             try {
@@ -417,8 +417,7 @@ function configureBot(bot) {
             } catch (err) {
               console.error('Farmer: Error while trying to wander the bot to farm again', err)
             }
-          }
-          else {
+          } else {
             console.error("Farmer: No " + itemType + " found after 20 tries... stopping farming routine completely")
             farmingInProgress = false
           }
