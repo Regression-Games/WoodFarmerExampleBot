@@ -439,7 +439,7 @@ function configureBot(bot) {
           let theItem = mineflayer.Item.fromNotch(entity.metadata[8])
           console.log("Item Info: " + (theItem.displayName || theItem.name))
         } catch (err) {
-          console.error("Couldn't convert item from notch data", err)
+          console.error(`Couldn't convert item from notch data: ${err.message}`)
         }
         if (bot.entity.position.distanceTo(entity.position) < range) {
           console.log("Found " + (entity.displayName || entity.name))
