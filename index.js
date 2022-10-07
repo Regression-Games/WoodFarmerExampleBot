@@ -1,6 +1,6 @@
 const mineflayer  = require('mineflayer')
 const { pathfinder, Movements } = require('mineflayer-pathfinder')
-const { GoalNear, GoalBlock, GoalGetToBlock, GoalLookAtBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
+const { GoalNear, GoalBlock, GoalGetToBlock, GoalCompositeAny, GoalLookAtBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
 const { Vec3 } = require('vec3');
 
 /**
@@ -462,7 +462,7 @@ function configureBot(bot) {
     try {
       if (item) {
         // get within 1 block.. you can't be exact b/c sometimes the item has coordinates that are in the block its sitting on and the bot can't put his feet there
-        return bot.pathfinder.goto(new GoalNear(item.position.x, item.position.y, item.position.z, 1))
+        return bot.pathfinder.goto(new GoalCompositeAny [new GoalNear(item.position.x, item.position.y, item.position.z, 1), new GoalBlock(item.position.x, item.position.y, item.position.z), new GoalBlock(item.position.x, item.position.y+1, item.position.z)])
       } else {
         return new Promise(function (resolve, reject) {
           reject(new Error("No item"))
