@@ -461,7 +461,7 @@ function configureBot(bot) {
     console.log('Going to pickup item - ' + (item.displayName || item.name))
     try {
       if (item) {
-        return bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
+        return bot.pathfinder.goto(new GoalNear(item.position.x, item.position.y, item.position.z, 0.25))
       } else {
         return new Promise(function (resolve, reject) {
           reject(new Error("No item"))
