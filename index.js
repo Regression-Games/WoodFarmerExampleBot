@@ -1,6 +1,6 @@
 const mineflayer  = require('mineflayer')
 const { pathfinder, Movements } = require('mineflayer-pathfinder')
-const { GoalNear, GoalBlock, GoalGetToBlock, GoalLookAtBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
+const { GoalNear, GoalBlock, GoalGetToBlock, GoalCompositeAny, GoalLookAtBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
 const { Vec3 } = require('vec3');
 
 /**
@@ -27,6 +27,7 @@ function configureBot(bot) {
     farmingInProgress = true;
     farmingDeliveryRun = false;
     bot.settings.viewDistance = 'far';
+    bot.pathfinder.setMovements(defaultMove)
     farmerRoutine(lastFarmedType || 'log')
   })
 
@@ -105,7 +106,7 @@ function configureBot(bot) {
     handleChatOrWhisper(args[0], args[1])
   })
 
-  function handleChatOrWhisper( username, message ) {
+  async function handleChatOrWhisper(username, message) {
     if (username === bot.username || username === 'you') return
 
     if (message === 'reinit') {
@@ -131,9 +132,13 @@ function configureBot(bot) {
         range = cmd[1]
       }
       if (range) {
-        comeToPlayer(username,range).catch((err) => {console.error("Couldn't find: " + username + " in range: " + range, err)})
+        comeToPlayer(username, range).catch((err) => {
+          console.error("Couldn't find: " + username + " in range: " + range, err)
+        })
       } else {
-        comeToPlayer(username).catch((err) => {console.error("Couldn't find: " + username, err)})
+        comeToPlayer(username).catch((err) => {
+          console.error("Couldn't find: " + username, err)
+        })
       }
     } else if (message.startsWith('goto')) {
       const cmd = message.split(' ')
@@ -143,18 +148,15 @@ function configureBot(bot) {
         const y = parseInt(cmd[2], 10)
         const z = parseInt(cmd[3], 10)
 
-        bot.pathfinder.setMovements(defaultMove)
         bot.pathfinder.setGoal(new GoalBlock(x, y, z))
       } else if (cmd.length === 3) { // goto x z
         const x = parseInt(cmd[1], 10)
         const z = parseInt(cmd[2], 10)
 
-        bot.pathfinder.setMovements(defaultMove)
         bot.pathfinder.setGoal(new GoalXZ(x, z))
       } else if (cmd.length === 2) { // goto y
         const y = parseInt(cmd[1], 10)
 
-        bot.pathfinder.setMovements(defaultMove)
         bot.pathfinder.setGoal(new GoalY(y))
       }
     } else if (message.startsWith('follow')) {
@@ -165,7 +167,7 @@ function configureBot(bot) {
         console.log('range: ' + range)
       }
       if (range) {
-        followPlayer(username,range)
+        followPlayer(username, range)
       } else {
         followPlayer(username)
       }
@@ -177,7 +179,7 @@ function configureBot(bot) {
         console.log('range: ' + range)
       }
       if (range) {
-        avoidPlayer(username,range)
+        avoidPlayer(username, range)
       } else {
         avoidPlayer(username)
       }
@@ -214,9 +216,13 @@ function configureBot(bot) {
         console.log('dropQuantity: ' + dropQuantity)
       }
       if (dropQuantity) {
-        dropInventoryItem(username, dropThing, dropQuantity).catch((err) => {console.error("Couldn't drop item: " + dropThing, err)})
+        dropInventoryItem(username, dropThing, dropQuantity).catch((err) => {
+          console.error("Couldn't drop item: " + dropThing, err)
+        })
       } else {
-        dropInventoryItem(username, dropThing).catch((err) => {console.error("Couldn't drop item: " + dropThing, err)})
+        dropInventoryItem(username, dropThing).catch((err) => {
+          console.error("Couldn't drop item: " + dropThing, err)
+        })
       }
     } else if (message.startsWith('dig')) {
       stopBot(username)
@@ -225,7 +231,9 @@ function configureBot(bot) {
       if (cmd.length >= 2) { // goto x y z
         blockType = cmd[1]
       }
-      findAndDigBlock(username, blockType).catch((err) => {console.error("Couldn't dig blockType: " + blockType, err)})
+      findAndDigBlock(username, blockType).catch((err) => {
+        console.error("Couldn't dig blockType: " + blockType, err)
+      })
     } else if (message.startsWith('attack')) {
       stopBot(username)
       keepAttacking = true;
@@ -301,86 +309,62 @@ function configureBot(bot) {
    * @param itemType
    * @param deliveryThreshold
    */
-  function farmerRoutine(itemType, deliveryThreshold = 10, failureCount = 0) {
-    console.log("Farmer: farmingInProgress=" + farmingInProgress + " , itemType: " + itemType)
+  async function farmerRoutine(itemType, deliveryThreshold = 10, failureCount = 0) {
+    console.log(`Farmer (${failureCount}): farmingInProgress=${farmingInProgress}, itemType: ${itemType}`)
     if (farmingInProgress) {
-
       // do a delivery run
       if (farmingDeliveryRun) {
-        console.log("Farmer: DeliveryRun: Finding a player to deliver to")
+        console.log(`Farmer (${failureCount}): DeliveryRun: Finding a player to deliver to`)
         // find a target player
         const target = Object.entries(bot.players).find((pair) => {
-          console.log("Checking Entity: " + pair[0] + " , " + pair[1].entity?.username)
+          console.log(`Farmer (${failureCount}): Checking Entity: ` + pair[0] + " , " + pair[1].entity?.username)
           // TODO: Need to be able to detect that this is a Human, not another bot
           if (pair[1].entity && pair[1].entity?.username && pair[0] !== bot.entity.username) {
-            console.log("Found Entity")
+            console.log(`Farmer (${failureCount}): Found Entity`)
             return true;
           }
           return false;
         })
         if (target) {
-          console.log("Farmer: DeliveryRun: Trying to deliver " + itemType + " to: " + target[1].entity.username)
-          comeToPlayer(target[1].entity.username, 3).then(async () => {
+          console.log(`Farmer (${failureCount}):  DeliveryRun: Trying to deliver ${itemType} to: ${target[1].entity.username}`)
+          try {
+            await comeToPlayer(target[1].entity.username, 3)
             await bot.lookAt(target[1].entity.position).catch((err) => {
-              console.error("Failed to look at player position", err)
+              console.error(`Farmer (${failureCount}): Failed to look at player position`, err)
             })
-            dropInventoryItem(target[1].entity.username, itemType).then(() => {
-              console.log("Farmer: DeliveryRun: Made a delivery to: " + target[1].entity.username + ".. going back to farming")
-              farmingDeliveryRun = false;
-              // inside promise... need to run again
-              setTimeout(() => {
-                farmerRoutine(itemType, deliveryThreshold)
-              }, 0);
-            }).catch((err) => {
-              if (failureCount < 10) {
-                console.log("Farmer: DeliveryRun: Failed to make a delivery at my target, trying again soon")
-                setTimeout(() => {
-                  farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
-                }, 100);
-              } else {
-                console.log("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming")
-                farmingDeliveryRun = false;
-                // inside promise... need to run again
-                setTimeout(() => {
-                  farmerRoutine(itemType, deliveryThreshold)
-                }, 0);
-              }
-            })
-          }).catch( (err) => {
-            if (failureCount < 10) {
-              console.error("Farmer: DeliveryRun: Didn't make it to my delivery target, trying again soon", err)
-              setTimeout(() => {
-                farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
-              }, 100);
+            await dropInventoryItem(target[1].entity.username, itemType)
+            console.log(`Farmer (${failureCount}):  DeliveryRun: Made a delivery to: ${target[1].entity.username}... going back to farming`)
+            farmingDeliveryRun = false;
+          } catch(err) {
+            if (failureCount < 20) {
+              console.error(`Farmer (${failureCount}):  DeliveryRun: Didn't make it to my delivery target, trying again soon`, err)
+              farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
+              return
             } else {
-              console.error("Farmer: DeliveryRun: No target player available for delivery after 10 tries.. going back to farming", err)
+              console.error(`Farmer (${failureCount}):  DeliveryRun: No target player available for delivery after 20 tries... going back to farming`, err)
               farmingDeliveryRun = false;
-              // inside promise... need to run again
-              setTimeout(() => {
-                farmerRoutine(itemType, deliveryThreshold)
-              }, 0);
             }
-          })
+          }
         } else {
-          console.log("Farmer: DeliveryRun: No player available for delivery.. going back to farming")
+          console.log(`Farmer (${failureCount}):  DeliveryRun: No player available for delivery.. going back to farming`)
           farmingDeliveryRun = false;
-          // not in a promise, no setTimeout
         }
       }
 
       // cut more
       if (!farmingDeliveryRun) {
-        findAndDigBlock(undefined, itemType, false, 50).then( async () => {
-          console.log("Farmer: Dug a " + itemType)
+        try {
+          await findAndDigBlock(undefined, itemType, false, 50)
+          console.log(`Farmer (${failureCount}):  Dug a ` + itemType)
           lastFarmedType = itemType;
           let itemOnGround = findItemInRange(itemType, 7)
           if (itemOnGround) {
-            await pickupItem(itemOnGround).catch((err) => {
-              console.error('Failed to pickup item', err)
-            });
+            await pickupItem(itemOnGround).catch ((err) => {
+              console.error(`Farmer (${failureCount}): Failed to pickup item`, err)
+            })
           }
           let quantityAvailable = 0;
-          let thingsInInventory = bot.inventory.items().filter((item) => {
+          bot.inventory.items().filter((item) => {
             let isAxe = itemType.toLowerCase().includes('axe');
             let itemNameMatches = (item.name && item.name.toLowerCase().includes(itemType.toLowerCase()) && (isAxe || !item.name.toLowerCase().includes('axe')));
             let displayNameMatches = (item.displayName && item.displayName.toLowerCase().includes(itemType.toLowerCase()) && (isAxe || !item.displayName.toLowerCase().includes('axe')));
@@ -391,35 +375,33 @@ function configureBot(bot) {
             return false;
           })
           if (quantityAvailable >= deliveryThreshold) {
-            console.log("Farmer: Scheduling a delivery run for " + quantityAvailable + " " + itemType)
+            console.log(`Farmer (${failureCount}):  Scheduling a delivery run for ` + quantityAvailable + " " + itemType)
             farmingDeliveryRun = true;
           } else {
-            console.log("Farmer: I have " + quantityAvailable + " / " + deliveryThreshold + " " + itemType + " needed for a delivery")
+            console.log(`Farmer (${failureCount}):  I have ` + quantityAvailable + " / " + deliveryThreshold + " " + itemType + " needed for a delivery")
           }
-          setTimeout(() => {
-            farmerRoutine(itemType, deliveryThreshold)
-          }, 0);
-        }).catch( (err) => {
-          if (failureCount < 5) {
-            console.error("Farmer: No " + itemType + " found, wandering the bot before resuming farming", err)
-            wanderTheBot(failureCount+1,(failureCount+1)*2).then( () => {
-              console.log('Farmer: Finished wandering... retrying farming')
-              setTimeout(() => {
-                farmerRoutine(itemType, deliveryThreshold)
-              }, 0);
-            }).catch((err) => {
-              console.error("Farmer: Failed to wander the bot... retrying farming", err)
-              setTimeout(() => {
-                farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
-              }, 100);
-            })
-          }
-          else {
-            console.error("Farmer: No " + itemType + " found after 10 tries... stopping farming routine completely")
+          farmerRoutine(itemType, deliveryThreshold)
+          return
+        } catch(err) {
+          if (failureCount < 50) {
+            console.error(`Farmer (${failureCount}):  No ` + itemType + " found, wandering the bot before resuming farming", err)
+            try {
+              await wanderTheBot(5*(failureCount), 20+(failureCount)*5)
+              console.log(`Farmer (${failureCount}):  Finished wandering... retrying farming`)
+              farmerRoutine(itemType, deliveryThreshold)
+              return
+            } catch (err) {
+              console.error(`Farmer (${failureCount}):  Error while trying to wander the bot to farm again`, err)
+              farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
+              return
+            }
+          } else {
+            console.error(`Farmer (${failureCount}):  No ` + itemType + " found after 20 tries... stopping farming routine completely")
             farmingInProgress = false
           }
-        })
+        }
       }
+      console.log(`Farmer (${failureCount}): Farming Routine Pass Ended`)
     }
   }
 
@@ -435,7 +417,7 @@ function configureBot(bot) {
           let theItem = mineflayer.Item.fromNotch(entity.metadata[8])
           console.log("Item Info: " + (theItem.displayName || theItem.name))
         } catch (err) {
-          console.error("Couldn't convert item from notch data", err)
+          console.error(`Couldn't convert item from notch data: ${err.message}`)
         }
         if (bot.entity.position.distanceTo(entity.position) < range) {
           console.log("Found " + (entity.displayName || entity.name))
@@ -453,14 +435,13 @@ function configureBot(bot) {
    * @param item
    * @param range
    */
-  function pickupItem(item) {
-    console.log('Going to pickup item - ' + (item.displayName || item.name))
+  async function pickupItem(item) {
     if (item) {
-      return bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
+      console.log('Going to pickup item - ' + (item.displayName || item.name))
+      // get within 1 block.. you can't be exact b/c sometimes the item has coordinates that are in the block its sitting on and the bot can't put his feet there
+      await bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
     } else {
-      return new Promise( function(resolve, reject) {
-        reject( new Error("No item"))
-      })
+      console.log('No Item to pickup')
     }
   }
 
@@ -493,19 +474,24 @@ function configureBot(bot) {
       let quantityToDrop = (quantity<0?quantityAvailable:quantity);
       console.log('YES, I will drop ' + quantityToDrop + ' ' + itemName)
       bot.whisper(username, 'YES, I will drop ' + quantityToDrop + ' ' + itemName)
-      return new Promise(function(resolve,reject) {
-        let i = 0;
-        while (quantityToDrop > 0 && i < itemsToDrop.length) {
-          let theItem = itemsToDrop[i];
-          let qty = (theItem.count > quantityToDrop ? quantityToDrop : theItem.count);
-          bot.toss(theItem.type, theItem.metadata, qty).catch((err) => {});
-          quantityToDrop -= qty;
-          ++i;
-        }
-        if( quantityToDrop <= 0 ) {
-          resolve()
-        } else {
-          reject(new Error('I dropped some, but didn\'t have ' + (quantity>0?quantity:'') + ' ' + itemName + ' to drop'))
+      return new Promise(async function (resolve, reject) {
+        try {
+          let i = 0;
+          while (quantityToDrop > 0 && i < itemsToDrop.length) {
+            let theItem = itemsToDrop[i];
+            let qty = (theItem.count > quantityToDrop ? quantityToDrop : theItem.count);
+            await bot.toss(theItem.type, theItem.metadata, qty)
+            quantityToDrop -= qty;
+            ++i;
+          }
+          if (quantityToDrop <= 0) {
+            resolve()
+          } else {
+            reject(new Error('I dropped some, but didn\'t have ' + (quantity > 0 ? quantity : '') + ' ' + itemName + ' to drop'))
+          }
+        } catch (err) {
+          console.log('I had an error delivering the goods', err)
+          reject(new Error('I had an error delivering the goods'))
         }
       })
     }
@@ -531,7 +517,6 @@ function configureBot(bot) {
     console.log('YES, I will come to ' + range + ' away from: ' + username)
     bot.whisper(username, 'YES, I will come to ' + range + ' away from you')
 
-    bot.pathfinder.setMovements(defaultMove)
     return bot.pathfinder.goto(new GoalNear(p.x, p.y, p.z, range))
   }
 
@@ -545,7 +530,6 @@ function configureBot(bot) {
     console.log('YES, I will follow at ' + range + ' away from: ' + username)
     bot.whisper(username, 'YES, I will follow at ' + range + ' away from you')
 
-    bot.pathfinder.setMovements(defaultMove)
     bot.pathfinder.setGoal(new GoalFollow(target, range), true)
   }
 
@@ -559,7 +543,6 @@ function configureBot(bot) {
     console.log('YES, I will stay at least ' + range + ' away from: ' + username)
     bot.whisper(username, 'YES, I will stay at least ' + range + ' away from you')
 
-    bot.pathfinder.setMovements(defaultMove)
     bot.pathfinder.setGoal(new GoalInvert(new GoalFollow(target, range)), true)
   }
 
@@ -587,40 +570,27 @@ function configureBot(bot) {
         bot.whisper(username, 'YES, I will dig - ' + blockName)
       }
 
-      bot.pathfinder.setMovements(defaultMove)
-
-      return new Promise(function (resolve, reject) {
+      return new Promise(async function (resolve, reject) {
         console.log('Moving to block to dig it')
-        bot.pathfinder.goto(new GoalLookAtBlock(theBlock.position, bot.world, {reach: 4}))
-            .then( async () => {
-              const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(theBlock.position))
-              if (bestHarvestTool) {
-                await bot.equip(bestHarvestTool, 'hand')
-              }
-              console.log("Got to the block and the right tool, now to dig it")
-              bot.dig(bot.blockAt(theBlock.position))
-                  .then(() => {
-                    console.log('I dug up a ' + blockName)
-                    if (username) {
-                      bot.whisper(username, 'I dug up a ' + blockName)
-                    }
-                    resolve()
-                  })
-                  .catch(err => {
-                    console.error('ERROR, I had problem trying to dig ' + blockName, err)
-                    if (username) {
-                      bot.whisper(username, 'ERROR, I had problem trying to dig ' + blockName)
-                    }
-                    reject(new Error("Couldn't get to or dig block"))
-                  })
+        try {
+          await bot.pathfinder.goto(new GoalLookAtBlock(theBlock.position, bot.world, {reach: 4}))
+          const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(theBlock.position))
+          if (bestHarvestTool) {
+            await bot.equip(bestHarvestTool, 'hand').catch((err) => {
+              console.error('Unable to equip a better tool', err)
             })
-            .catch((err) => {
-              console.error('ERROR, I had pathfinding problem trying to dig ' + blockName, err)
-              if (username) {
-                bot.whisper(username, 'ERROR, I had pathfinding problem trying to dig ' + blockName)
-              }
-              reject(new Error("Couldn't get to or dig block"))
-            })
+          }
+          console.log("Got to the block and the right tool, now to dig it")
+          await bot.dig(bot.blockAt(theBlock.position))
+          console.log('I dug up a ' + blockName)
+          if (username) {
+            bot.whisper(username, 'I dug up a ' + blockName)
+          }
+          resolve()
+        } catch (err) {
+          console.error('Error pathing/digging a block', err)
+          reject(new Error('Error pathing/digging a block'))
+        }
       })
     } else {
       return new Promise(function (resolve, reject) {
@@ -702,7 +672,6 @@ function configureBot(bot) {
               bot.attack(entity, true);
             } else {
               if (!goalSet) {
-                bot.pathfinder.setMovements(defaultMove)
                 bot.pathfinder.setGoal(new GoalFollow(entity, 1), true);
                 goalSet = true;
               }
@@ -712,7 +681,6 @@ function configureBot(bot) {
             if (username) {
               bot.whisper(username, 'My target died ... finding a new target')
             }
-            bot.pathfinder.setMovements(defaultMove)
             bot.pathfinder.stop()
             bot.pathfinder.setGoal(null)
             findAndAttackTarget(username, targetType)
