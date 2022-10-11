@@ -310,44 +310,43 @@ function configureBot(bot) {
    * @param deliveryThreshold
    */
   async function farmerRoutine(itemType, deliveryThreshold = 10, failureCount = 0) {
-    console.log("Farmer: farmingInProgress=" + farmingInProgress + " , itemType: " + itemType)
+    console.log(`Farmer (${failureCount}): farmingInProgress=${farmingInProgress}, itemType: ${itemType}`)
     if (farmingInProgress) {
-
       // do a delivery run
       if (farmingDeliveryRun) {
-        console.log("Farmer: DeliveryRun: Finding a player to deliver to")
+        console.log(`Farmer (${failureCount}): DeliveryRun: Finding a player to deliver to`)
         // find a target player
         const target = Object.entries(bot.players).find((pair) => {
-          console.log("Checking Entity: " + pair[0] + " , " + pair[1].entity?.username)
+          console.log(`Farmer (${failureCount}): Checking Entity: ` + pair[0] + " , " + pair[1].entity?.username)
           // TODO: Need to be able to detect that this is a Human, not another bot
           if (pair[1].entity && pair[1].entity?.username && pair[0] !== bot.entity.username) {
-            console.log("Found Entity")
+            console.log(`Farmer (${failureCount}): Found Entity`)
             return true;
           }
           return false;
         })
         if (target) {
-          console.log("Farmer: DeliveryRun: Trying to deliver " + itemType + " to: " + target[1].entity.username)
+          console.log(`Farmer (${failureCount}):  DeliveryRun: Trying to deliver ${itemType} to: ${target[1].entity.username}`)
           try {
             await comeToPlayer(target[1].entity.username, 3)
             await bot.lookAt(target[1].entity.position).catch((err) => {
-              console.error("Failed to look at player position", err)
+              console.error(`Farmer (${failureCount}): Failed to look at player position`, err)
             })
             await dropInventoryItem(target[1].entity.username, itemType)
-            console.log("Farmer: DeliveryRun: Made a delivery to: " + target[1].entity.username + ".. going back to farming")
+            console.log(`Farmer (${failureCount}):  DeliveryRun: Made a delivery to: ${target[1].entity.username}... going back to farming`)
             farmingDeliveryRun = false;
           } catch(err) {
             if (failureCount < 20) {
-              console.error("Farmer: DeliveryRun: Didn't make it to my delivery target, trying again soon", err)
+              console.error(`Farmer (${failureCount}):  DeliveryRun: Didn't make it to my delivery target, trying again soon`, err)
               farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
               return
             } else {
-              console.error("Farmer: DeliveryRun: No target player available for delivery after 20 tries.. going back to farming", err)
+              console.error(`Farmer (${failureCount}):  DeliveryRun: No target player available for delivery after 20 tries... going back to farming`, err)
               farmingDeliveryRun = false;
             }
           }
         } else {
-          console.log("Farmer: DeliveryRun: No player available for delivery.. going back to farming")
+          console.log(`Farmer (${failureCount}):  DeliveryRun: No player available for delivery.. going back to farming`)
           farmingDeliveryRun = false;
         }
       }
@@ -356,12 +355,12 @@ function configureBot(bot) {
       if (!farmingDeliveryRun) {
         try {
           await findAndDigBlock(undefined, itemType, false, 50)
-          console.log("Farmer: Dug a " + itemType)
+          console.log(`Farmer (${failureCount}):  Dug a ` + itemType)
           lastFarmedType = itemType;
           let itemOnGround = findItemInRange(itemType, 7)
           if (itemOnGround) {
             await pickupItem(itemOnGround).catch ((err) => {
-              console.error('Failed to pickup item', err)
+              console.error(`Farmer (${failureCount}): Failed to pickup item`, err)
             })
           }
           let quantityAvailable = 0;
@@ -376,33 +375,33 @@ function configureBot(bot) {
             return false;
           })
           if (quantityAvailable >= deliveryThreshold) {
-            console.log("Farmer: Scheduling a delivery run for " + quantityAvailable + " " + itemType)
+            console.log(`Farmer (${failureCount}):  Scheduling a delivery run for ` + quantityAvailable + " " + itemType)
             farmingDeliveryRun = true;
           } else {
-            console.log("Farmer: I have " + quantityAvailable + " / " + deliveryThreshold + " " + itemType + " needed for a delivery")
+            console.log(`Farmer (${failureCount}):  I have ` + quantityAvailable + " / " + deliveryThreshold + " " + itemType + " needed for a delivery")
           }
           farmerRoutine(itemType, deliveryThreshold)
           return
         } catch(err) {
           if (failureCount < 20) {
-            console.error("Farmer: No " + itemType + " found, wandering the bot before resuming farming", err)
+            console.error(`Farmer (${failureCount}):  No ` + itemType + " found, wandering the bot before resuming farming", err)
             try {
               await wanderTheBot(20+(failureCount + 1)*3, 40+(failureCount + 1)*6)
-              console.log('Farmer: Finished wandering... retrying farming')
+              console.log(`Farmer (${failureCount}):  Finished wandering... retrying farming`)
               farmerRoutine(itemType, deliveryThreshold)
               return
             } catch (err) {
-              console.error('Farmer: Error while trying to wander the bot to farm again', err)
+              console.error(`Farmer (${failureCount}):  Error while trying to wander the bot to farm again`, err)
               farmerRoutine(itemType, deliveryThreshold, failureCount + 1)
               return
             }
           } else {
-            console.error("Farmer: No " + itemType + " found after 20 tries... stopping farming routine completely")
+            console.error(`Farmer (${failureCount}):  No ` + itemType + " found after 20 tries... stopping farming routine completely")
             farmingInProgress = false
           }
         }
       }
-      console.log('Farming Routine Pass Ended')
+      console.log(`Farmer (${failureCount}): Farming Routine Pass Ended`)
     }
   }
 
