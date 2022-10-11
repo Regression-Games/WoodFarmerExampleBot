@@ -2,12 +2,13 @@ const mineflayer  = require('mineflayer')
 const { pathfinder, Movements } = require('mineflayer-pathfinder')
 const { GoalNear, GoalBlock, GoalGetToBlock, GoalCompositeAny, GoalLookAtBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
 const { Vec3 } = require('vec3');
+const { RGMatchInfo } = require('rg-match-info');
 
 /**
  * Mineflayer API docs - https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md
  * Mineflayer Pathfinder API docs - https://github.com/PrismarineJS/mineflayer-pathfinder/blob/master/readme.md
  */
-function configureBot(bot) {
+function configureBot(bot, matchInfoEmitter) {
 
   bot.loadPlugin(pathfinder)
 
@@ -19,6 +20,37 @@ function configureBot(bot) {
   let lastFarmedType = undefined;
   let farmingInProgress = false;
   let farmingDeliveryRun = false;
+
+  let matchInfo = null;
+
+
+  /**
+   * Handle match info updates
+   */
+  matchInfoEmitter.on('score_update', (matchInfo) => {
+    console.log(`Match scores updated`)
+    this.matchInfo = matchInfo;
+  })
+
+  matchInfoEmitter.on('match_started', (matchInfo) => {
+    console.log(`The match has started`)
+    this.matchInfo = matchInfo;
+  })
+
+  matchInfoEmitter.on('match_ended', (matchInfo) => {
+    console.log(`The match has ended`)
+    this.matchInfo = matchInfo;
+  })
+
+  matchInfoEmitter.on('player_joined', (matchInfo, username, team) => {
+    console.log(`${username} on team: ${team} has joined the match `)
+    this.matchInfo = matchInfo;
+  })
+
+  matchInfoEmitter.on('player_left', (matchInfo, username, team) => {
+    console.log(`${username} on team: ${team} has left the match `)
+    this.matchInfo = matchInfo;
+  })
 
   /**
    * When spawned, start looking for wood
