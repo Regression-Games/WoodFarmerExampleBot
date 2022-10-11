@@ -386,7 +386,7 @@ function configureBot(bot) {
           if (failureCount < 20) {
             console.error(`Farmer (${failureCount}):  No ` + itemType + " found, wandering the bot before resuming farming", err)
             try {
-              await wanderTheBot(20+(failureCount + 1)*3, 40+(failureCount + 1)*6)
+              await wanderTheBot(5*(failureCount + 1), 30+(failureCount + 1)*5)
               console.log(`Farmer (${failureCount}):  Finished wandering... retrying farming`)
               farmerRoutine(itemType, deliveryThreshold)
               return
