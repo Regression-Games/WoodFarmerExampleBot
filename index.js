@@ -435,19 +435,13 @@ function configureBot(bot) {
    * @param item
    * @param range
    */
-  function pickupItem(item) {
-    console.log('Going to pickup item - ' + (item.displayName || item.name))
-    try {
-      if (item) {
-        // get within 1 block.. you can't be exact b/c sometimes the item has coordinates that are in the block its sitting on and the bot can't put his feet there
-        return bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
-      } else {
-        return new Promise(function (resolve, reject) {
-          reject(new Error("No item"))
-        })
-      }
-    } catch( err) {
-      console.error('Error while trying to set off on my journey to pickup the Item', err)
+  async function pickupItem(item) {
+    if (item) {
+      console.log('Going to pickup item - ' + (item.displayName || item.name))
+      // get within 1 block.. you can't be exact b/c sometimes the item has coordinates that are in the block its sitting on and the bot can't put his feet there
+      await bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
+    } else {
+      console.log('No Item to pickup')
     }
   }
 
