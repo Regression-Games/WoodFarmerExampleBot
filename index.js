@@ -3,6 +3,7 @@ const { pathfinder, Movements } = require('mineflayer-pathfinder')
 const { GoalNear, GoalBlock, GoalGetToBlock, GoalCompositeAny, GoalLookAtBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
 const { Vec3 } = require('vec3');
 const { RGMatchInfo } = require('rg-match-info');
+const mineflayerViewer = require('prismarine-viewer').mineflayer
 
 /**
  * Mineflayer API docs - https://github.com/PrismarineJS/mineflayer/blob/master/docs/api.md
@@ -20,6 +21,15 @@ function configureBot(bot, matchInfoEmitter) {
   let lastFarmedType = undefined;
   let farmingInProgress = false;
   let farmingDeliveryRun = false;
+
+  // Draw the path followed by the bot
+  const path = [bot.entity.position.clone()]
+  bot.on('move', () => {
+    if (path[path.length - 1].distanceTo(bot.entity.position) > 1) {
+      path.push(bot.entity.position.clone())
+      bot.viewer.drawLine('path', path)
+    }
+  })
 
   let matchInfo = null;
 
@@ -56,6 +66,7 @@ function configureBot(bot, matchInfoEmitter) {
    * When spawned, start looking for wood
    */
   bot.on('spawn', () => {
+    mineflayerViewer(bot, { port: 33333 }) // Start the viewing server on port 3000
     farmingInProgress = true;
     farmingDeliveryRun = false;
     bot.settings.viewDistance = 'far';
