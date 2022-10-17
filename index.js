@@ -57,7 +57,7 @@ function configureBot(bot, matchInfoEmitter) {
    * When spawned, start looking for wood
    */
   bot.on('spawn', () => {
-    mineflayerViewer(bot, { port: 33333 }) // Start the viewing server on port 3000
+    mineflayerViewer(bot, { viewDistance: 3, firstPerson: true, port: 33333 }) // Start the viewing server on port 3000
     farmingInProgress = true;
     farmingDeliveryRun = false;
     bot.settings.viewDistance = 'far';
