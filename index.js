@@ -594,7 +594,7 @@ function configureBot(bot, matchInfoEmitter) {
   function findAttackableEntity(targetType) {
     return bot.nearestEntity(ne => {
       if( !targetType || (ne.name && (ne.name.toLowerCase().includes(targetType.toLowerCase()))) || (ne.displayName && (ne.displayName.toLowerCase().includes(targetType.toLowerCase())))) {
-        logAndChat(`Evaluating attack target: ${(ne.displayName || ne.name)} , isValid: ${ne.isValid} , health: ${ne.health} , isMobOrPlayer: ${(ne.type === 'mob' || ne.type === 'player')}`)
+        logAndChat(`Evaluating attack target: ${(ne.displayName || ne.name)} , isValid: ${ne.isValid} , isMobOrPlayer: ${(ne.type === 'mob' || ne.type === 'player')}`)
         return (ne.isValid && (ne.type === 'mob' || ne.type === 'player'))
       }
       return false
@@ -615,10 +615,14 @@ function configureBot(bot, matchInfoEmitter) {
 
   async function attackRoutine(targetType) {
     let entity = findAttackableEntity(targetType)
-    await gotoEntity(entity, 2)
-    await attackEntity(entity)
-    if (keepAttacking) {
-      setTimeout(() => {attackRoutine(targetType)}, 100)
+    if (entity) {
+      await gotoEntity(entity, 2)
+      await attackEntity(entity)
+      if (keepAttacking) {
+          attackRoutine(targetType)
+      }
+    } else {
+      logAndChat(`No targetType: ${targetType} to attack`)
     }
   }
 
