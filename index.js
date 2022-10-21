@@ -592,7 +592,10 @@ function configureBot(bot, matchInfoEmitter) {
   }
 
   function findAttackableEntity(targetType) {
-    return bot.nearestEntity(ne => ((!targetType || (ne.name && (ne.name.toLowerCase().includes(targetType.toLowerCase()))) || (ne.displayName && (ne.displayName.toLowerCase().includes(targetType.toLowerCase())))) && (ne.health > 0) && (ne.type === 'mob' || ne.type === 'player')));
+    return bot.nearestEntity(ne => {
+      logAndChat(`Evaluating attack target: ${(ne.displayName || ne.name)}`)
+      return ((!targetType || (ne.name && (ne.name.toLowerCase().includes(targetType.toLowerCase()))) || (ne.displayName && (ne.displayName.toLowerCase().includes(targetType.toLowerCase())))) && (ne.health > 0) && (ne.type === 'mob' || ne.type === 'player'))
+    });
   }
 
   async function attackEntity(entity) {
