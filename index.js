@@ -618,7 +618,7 @@ function configureBot(bot, matchInfoEmitter) {
     await gotoEntity(entity, 2)
     await attackEntity(entity)
     if (keepAttacking) {
-      attackRoutine(targetType)
+      setTimeout(() => {attackRoutine(targetType)}, 100)
     }
   }
 
