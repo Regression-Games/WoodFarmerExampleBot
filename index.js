@@ -434,12 +434,12 @@ function configureBot(bot, matchInfoEmitter) {
         } catch (err) {
           console.error(`Couldn't convert item from notch data: ${err.message}`)
         }
-        if (bot.entity.position.distanceTo(entity.position) < range) {
+        if (matchedName && bot.entity.position.distanceTo(entity.position) < range) {
           console.log("Found " + (entity.displayName || entity.name))
-          return matchedName;
+          return entity;
         }
       }
-      return false;
+      return undefined;
     })
   }
 
@@ -456,10 +456,6 @@ function configureBot(bot, matchInfoEmitter) {
     } else {
       logAndChat('No Item to pickup')
     }
-  }
-
-  function findAndPickupItem(itemName, range= 30) {
-    return pickupItem(findItemInRange(itemName, range))
   }
 
   /**
