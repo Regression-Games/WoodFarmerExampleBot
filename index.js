@@ -616,7 +616,7 @@ function configureBot(bot, matchInfoEmitter) {
   async function attackRoutine(targetType) {
     let entity = findAttackableEntity(targetType)
     await gotoEntity(entity, 2)
-    attackEntity(entity)
+    await attackEntity(entity)
     if (keepAttacking) {
       attackRoutine(targetType)
     }
