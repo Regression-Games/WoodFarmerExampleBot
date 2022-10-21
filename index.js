@@ -419,22 +419,24 @@ function configureBot(bot, matchInfoEmitter) {
   }
 
   function findItemInRange(itemName, range= 30) {
-    //TODO Never figured out how to get the name of a loose floating item, even by its id
-    console.log("Looking for item " + itemName + " in range " + range)
+    logAndChat("Looking for item " + itemName + " in range " + range)
     return bot.nearestEntity((entity) => {
       if( entity.type === "object" && entity.objectType === "Item" && entity.onGround) {
-        console.log("Evaluating: " + entity.name + "-" + entity.displayName + " - id: " + entity.id + " at (" + entity.position.x + "," + entity.position.y + "," + entity.position.z + ") - metadata: " + JSON.stringify(entity.metadata[8]))
+        let matchedName = true;
         try {
           // Understanding entity metadata ... https://wiki.vg/Entity_metadata#Entity_Metadata_Format
           // since this is an item entity, we can parse the item data from field index 8
           let theItem = mcData.items[entity.metadata[8].itemId]
-          console.log("Item Info: " + (theItem.displayName || theItem.name))
+          console.log("Evaluating: " + (theItem.displayName || theItem.name) + " - id: " + entity.id + " at (" + entity.position.x + "," + entity.position.y + "," + entity.position.z + ") - metadata: " + JSON.stringify(entity.metadata[8]))
+          if (!(!itemName || itemName.toLowerCase().contains(theItem.displayName.toLowerCase()) || itemName.toLowerCase.contains(theItem.name.toLowerCase()))) {
+            matchedName = false
+          }
         } catch (err) {
           console.error(`Couldn't convert item from notch data: ${err.message}`)
         }
         if (bot.entity.position.distanceTo(entity.position) < range) {
           console.log("Found " + (entity.displayName || entity.name))
-          return true;
+          return matchedName;
         }
       }
       return false;
