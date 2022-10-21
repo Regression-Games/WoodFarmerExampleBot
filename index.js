@@ -24,7 +24,6 @@ function configureBot(bot, matchInfoEmitter) {
 
   let matchInfo = null;
 
-
   /**
    * Handle match info updates
    */
@@ -52,6 +51,11 @@ function configureBot(bot, matchInfoEmitter) {
     console.log(`${username} on team: ${team} has left the match `)
     this.matchInfo = matchInfo;
   })
+
+  function logAndChat(message) {
+    console.log(message)
+    bot.chat(message)
+  }
 
   /**
    * When spawned, start looking for wood
@@ -146,16 +150,10 @@ function configureBot(bot, matchInfoEmitter) {
     if (message === 'reinit') {
       bot.end()
     } else if (message === 'hardstop') {
-      console.log('YES, I will hard stop')
-      if (username) {
-        bot.whisper(username, 'YES, I will hard stop')
-      }
+      logAndChat('YES, I will hard stop')
       hardStopBot()
     } else if (message === 'stop') {
-      console.log('YES, I will stop')
-      if (username) {
-        bot.whisper(username, 'YES, I will stop')
-      }
+      logAndChat('YES, I will stop')
       stopBot()
     } else if (message.startsWith('locate')) {
       // TODO Implement the bot telling you how many degrees left or right and up or down to walk toward it
@@ -250,52 +248,33 @@ function configureBot(bot, matchInfoEmitter) {
         console.log('dropQuantity: ' + dropQuantity)
       }
       if (dropQuantity) {
-        dropInventoryItem(username, dropThing, dropQuantity).catch((err) => {
+        dropInventoryItem(dropThing, dropQuantity).catch((err) => {
           console.error("Couldn't drop item: " + dropThing, err)
         })
       } else {
-        dropInventoryItem(username, dropThing).catch((err) => {
+        dropInventoryItem(dropThing).catch((err) => {
           console.error("Couldn't drop item: " + dropThing, err)
         })
       }
     } else if (message.startsWith('dig')) {
-      stopBot(username)
+      stopBot()
       const cmd = message.split(' ')
       let blockType = undefined;
       if (cmd.length >= 2) { // goto x y z
         blockType = cmd[1]
       }
-      findAndDigBlock(username, blockType).catch((err) => {
+      findAndDigBlock(blockType).catch((err) => {
         console.error("Couldn't dig blockType: " + blockType, err)
       })
     } else if (message.startsWith('attack')) {
-      stopBot(username)
+      stopBot()
       keepAttacking = true;
       const cmd = message.split(' ')
       let targetType = undefined;
       if (cmd.length >= 2) { // goto x y z
         targetType = cmd[1]
       }
-      findAndAttackTarget(username, targetType)
-    } else if (message === 'break') {
-      keepAttacking = false;
-      const target = bot.players[username] ? bot.players[username].entity : null
-      if (!target) {
-        bot.chat('I can\'t see: ' + username)
-        return
-      }
-      let targetBlock = bot.blockAtEntityCursor(target)
-      const p = target.position.offset(0, -1, 0)
-      const goal = new GoalBlock(p.x, p.y, p.z);
-      console.log('YES, I will break a block at - ' + p.x + ', ' + p.y + ', ' + p.z)
-      bot.whisper(username, 'YES, I will break a block at - ' + p.x + ', ' + p.y + ', ' + p.z)
-      bot.pathfinder.goto(goal)
-          .then(() => {
-            bot.dig(bot.blockAt(p))
-                .catch(err => console.error('digging error', err))
-          }, (err) => {
-            console.error('Pathfinding error', err)
-          })
+      findAndAttackTarget(targetType)
     } else if (message.startsWith('farm')) {
       stopBot()
       const cmd = message.split(' ')
@@ -366,7 +345,7 @@ function configureBot(bot, matchInfoEmitter) {
             await bot.lookAt(target[1].entity.position).catch((err) => {
               console.error(`Farmer (${failureCount}): Failed to look at player position`, err)
             })
-            await dropInventoryItem(target[1].entity.username, itemType)
+            await dropInventoryItem(itemType)
             console.log(`Farmer (${failureCount}):  DeliveryRun: Made a delivery to: ${target[1].entity.username}... going back to farming`)
             farmingDeliveryRun = false;
           } catch(err) {
@@ -388,7 +367,7 @@ function configureBot(bot, matchInfoEmitter) {
       // cut more
       if (!farmingDeliveryRun) {
         try {
-          await findAndDigBlock(undefined, itemType, false, 50)
+          await findAndDigBlock(itemType, false, 50)
           console.log(`Farmer (${failureCount}):  Dug a ` + itemType)
           lastFarmedType = itemType;
           let itemOnGround = findItemInRange(itemType, 7)
@@ -444,7 +423,7 @@ function configureBot(bot, matchInfoEmitter) {
     console.log("Looking for item " + itemName + " in range " + range)
     return bot.nearestEntity((entity) => {
       if( entity.type === "object" && entity.objectType === "Item" && entity.onGround) {
-        console.log("Evaluating: " + entity.name + "-" + entity.displayName + " - id: " + entity.id + " at (" + entity.position.x + "," + entity.position.y + "," + entity.position.z + ") - metadata: " + JSON.stringify(entity.metadata))
+        console.log("Evaluating: " + entity.name + "-" + entity.displayName + " - id: " + entity.id + " at (" + entity.position.x + "," + entity.position.y + "," + entity.position.z + ") - metadata: " + JSON.stringify(entity.metadata[8]))
         try {
           // Understanding entity metadata ... https://wiki.vg/Entity_metadata#Entity_Metadata_Format
           // since this is an item entity, we can parse the item data from field index 8
@@ -465,17 +444,15 @@ function configureBot(bot, matchInfoEmitter) {
   /**
    * This will goto and pickup the item
    *
-   * @param username
    * @param item
    * @param range
    */
   async function pickupItem(item) {
     if (item) {
-      console.log('Going to pickup item - ' + (item.displayName || item.name))
-      // get within 1 block.. you can't be exact b/c sometimes the item has coordinates that are in the block its sitting on and the bot can't put his feet there
+      logAndChat('Going to pickup item - ' + (item.displayName || item.name))
       await bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
     } else {
-      console.log('No Item to pickup')
+      logAndChat('No Item to pickup')
     }
   }
 
@@ -484,17 +461,16 @@ function configureBot(bot, matchInfoEmitter) {
   }
 
   /**
-   * This will drop the quantity requested of any inventory item matching the itemName.  So if you request to drop 'log', any type of log would be dropped to fulfill this request.
+   * This will drop up to the quantity requested of any inventory item matching the itemName.  So if you request to drop 'log', any type of log would be dropped to fulfill this request.
    * Note: -1 for quantity means to drop ALL of them, which is the default
    *
-   * @param username
    * @param itemName
    * @param quantity
    */
-  function dropInventoryItem(username, itemName, quantity= -1) {
+  async function dropInventoryItem(itemName, quantity= -1) {
     let quantityAvailable = 0;
     let itemsToDrop = bot.inventory.items().filter((item) => {
-      // don't drop an 'axe' unless it has explicitly requested.. this prevents the bot from dropping stone tools when dropping stone
+      // don't drop an 'axe' unless it has explicitly requested... this prevents the bot from dropping stone tools when dropping stone
       let isAxe = itemName.toLowerCase().includes('axe');
       let itemNameMatches = (item.name && item.name.toLowerCase().includes(itemName.toLowerCase()) && (isAxe || !item.name.toLowerCase().includes('axe')));
       let displayNameMatches = (item.displayName && item.displayName.toLowerCase().includes(itemName.toLowerCase()) && (isAxe || !item.displayName.toLowerCase().includes('axe')));
@@ -504,198 +480,139 @@ function configureBot(bot, matchInfoEmitter) {
       }
       return false;
     })
-    if (quantityAvailable > 0 && quantityAvailable >= quantity) {
+    if (quantityAvailable > 0) {
       let quantityToDrop = (quantity<0?quantityAvailable:quantity);
-      console.log('YES, I will drop ' + quantityToDrop + ' ' + itemName)
-      bot.whisper(username, 'YES, I will drop ' + quantityToDrop + ' ' + itemName)
-      return new Promise(async function (resolve, reject) {
-        try {
-          let i = 0;
-          while (quantityToDrop > 0 && i < itemsToDrop.length) {
-            let theItem = itemsToDrop[i];
-            let qty = (theItem.count > quantityToDrop ? quantityToDrop : theItem.count);
-            await bot.toss(theItem.type, theItem.metadata, qty)
-            quantityToDrop -= qty;
-            ++i;
-          }
-          if (quantityToDrop <= 0) {
-            resolve()
-          } else {
-            reject(new Error('I dropped some, but didn\'t have ' + (quantity > 0 ? quantity : '') + ' ' + itemName + ' to drop'))
-          }
-        } catch (err) {
-          console.log('I had an error delivering the goods', err)
-          reject(new Error('I had an error delivering the goods'))
+      logAndChat('YES, I will drop ' + quantityToDrop + ' ' + itemName)
+      try {
+        let i = 0;
+        while (quantityToDrop > 0 && i < itemsToDrop.length) {
+          let theItem = itemsToDrop[i];
+          let qty = (theItem.count > quantityToDrop ? quantityToDrop : theItem.count);
+          await bot.toss(theItem.type, theItem.metadata, qty)
+          quantityToDrop -= qty;
+          ++i;
         }
-      })
+
+      } catch (err) {
+        console.error(`I had an error dropping ${itemName}`, err)
+      }
     }
     else {
-      console.log('NO, I don\'t have enough ' + itemName + ' to drop')
-      bot.whisper(username, 'NO, I don\'t have enough ' + itemName + ' to drop')
-      return new Promise(function(resolve,reject) {
-        reject(new Error('I don\'t have enough ' + itemName + ' to drop'))
-      })
+      logAndChat(`NO, I don't have any ${itemName} to drop`)
     }
   }
 
-  function comeToPlayer(username, range = 1) {
+  async function comeToPlayer(username, range = 1) {
     const target = bot.players[username] ? bot.players[username].entity : null
     if (!target) {
-      bot.chat('I don\'t see: ' + username)
-      return new Promise(function(resolve,reject) {
-        reject(new Error("No Target"))
-      })
-    }
-    const p = target.position
-
-    console.log('YES, I will come to ' + range + ' away from: ' + username)
-    bot.whisper(username, 'YES, I will come to ' + range + ' away from you')
-
-    return bot.pathfinder.goto(new GoalNear(p.x, p.y, p.z, range))
-  }
-
-  function followPlayer(username, range = 2) {
-    const target = bot.players[username] ? bot.players[username].entity : null
-    if (!target) {
-      bot.chat('I don\'t see: ' + username)
-      return
-    }
-
-    console.log('YES, I will follow at ' + range + ' away from: ' + username)
-    bot.whisper(username, 'YES, I will follow at ' + range + ' away from you')
-
-    bot.pathfinder.setGoal(new GoalFollow(target, range), true)
-  }
-
-  function avoidPlayer(username, range= 5) {
-    const target = bot.players[username] ? bot.players[username].entity : null
-    if (!target) {
-      bot.chat('I don\'t see: ' + username)
-      return
-    }
-
-    console.log('YES, I will stay at least ' + range + ' away from: ' + username)
-    bot.whisper(username, 'YES, I will stay at least ' + range + ' away from you')
-
-    bot.pathfinder.setGoal(new GoalInvert(new GoalFollow(target, range)), true)
-  }
-
-  const rayTraceEntitySight = function (entity) {
-    if (bot.world?.raycast) {
-      const { height, position, yaw, pitch } = entity
-      const x = -Math.sin(yaw) * Math.cos(pitch)
-      const y = Math.sin(pitch)
-      const z = -Math.cos(yaw) * Math.cos(pitch)
-      const rayBlock = bot.world.raycast(position.offset(0, height, 0), new Vec3(x, y, z), 120)
-      if (rayBlock) {
-        return rayBlock
-      }
-      return null
+      logAndChat(`I don't see: ${username}`)
     } else {
-      throw Error('bot.world.raycast does not exists. Try updating prismarine-world.')
+      logAndChat(`YES, I will come to range: ${range} away from: ${username}`)
+      await bot.pathfinder.goto(new GoalNear(target.position.x, target.position.y, target.position.z, range))
     }
   }
 
-  function digBlock(username, blockType, theBlock) {
-    if (theBlock) {
-      const blockName = theBlock.displayName || theBlock.name;
-      console.log('YES, I will dig - ' + blockName)
-      if (username) {
-        bot.whisper(username, 'YES, I will dig - ' + blockName)
-      }
-
-      return new Promise(async function (resolve, reject) {
-        console.log('Moving to block to dig it')
-        try {
-          await bot.pathfinder.goto(new GoalLookAtBlock(theBlock.position, bot.world, {reach: 4}))
-          const bestHarvestTool = bot.pathfinder.bestHarvestTool(bot.blockAt(theBlock.position))
-          if (bestHarvestTool) {
-            await bot.equip(bestHarvestTool, 'hand').catch((err) => {
-              console.error('Unable to equip a better tool', err)
-            })
-          }
-          console.log("Got to the block and the right tool, now to dig it")
-          await bot.dig(bot.blockAt(theBlock.position))
-          console.log('I dug up a ' + blockName)
-          if (username) {
-            bot.whisper(username, 'I dug up a ' + blockName)
-          }
-          resolve()
-        } catch (err) {
-          console.error('Error pathing/digging a block', err)
-          reject(new Error('Error pathing/digging a block'))
-        }
-      })
+  async function followPlayer(username, range = 2) {
+    const target = bot.players[username] ? bot.players[username].entity : null
+    if (!target) {
+      logAndChat(`I don't see: ${username}`)
     } else {
-      return new Promise(function (resolve, reject) {
-        console.log("No block to dig")
-        reject(new Error("No block to dig"))
-      })
+      logAndChat(`YES, I will follow at range: ${range} away from: ${username}`)
+      bot.pathfinder.setGoal(new GoalFollow(target, range), true)
     }
   }
 
-  function findBlock(username, blockType, onlyTakeTopBlocks=false, maxDistance = 50) {
-    console.log("Finding block of type: " + blockType)
+  async function avoidPlayer(username, range= 5) {
+    const target = bot.players[username] ? bot.players[username].entity : null
+    if (!target) {
+      logAndChat(`I don't see: ${username}`)
+    } else {
+      logAndChat(`YES, I will stay at least range: ${range} away from: ${username}`)
+      bot.pathfinder.setGoal(new GoalInvert(new GoalFollow(target, range)), true)
+    }
+  }
+
+  function positionString(position) {
+    return `${position.x}, ${position.y}, ${position.z}`
+  }
+
+  function findBlock(blockType, onlyFindTopBlocks=false, range = 50) {
+    console.log(`Finding block of type: ${blockType} in range: ${range}`)
     let theBlocks = bot.findBlocks({
       point: bot.entity.position,
       matching: (block) => {
-        // if nothing specified... try anything but air
         if (blockType) {
-          if (block.name.toLowerCase().includes(blockType.toLowerCase())) {
-            return true;
-          }
-          if (block.displayName.toLowerCase().includes(blockType.toLowerCase())) {
+          if ((block.name.toLowerCase().includes(blockType.toLowerCase())) || (block.displayName.toLowerCase().includes(blockType.toLowerCase())) ) {
             return true;
           }
           return false;
         }
         if (block.type !== 0) {
+          // if nothing specified... try anything but air
           return true;
         }
         return false;
       },
-      maxDistance: maxDistance,
+      maxDistance: range,
       useExtraInfo: (block) => {
-        if (onlyTakeTopBlocks ) {
+        if (onlyFindTopBlocks ) {
           const blockAbove = bot.blockAt(block.position.offset(0, 1, 0))
-          return !blockAbove || blockAbove.type === 0
+          return !blockAbove || blockAbove.type === 0 // only find if clear or 'air' above
         }
         return true;
       },
-      count: 3, // return up to N options... thus allowing us to pick the easiest to get to
+      count: 1, // return up to 1 options...
     })
 
-    // always picking the closest block seemed smart, until that block wasn't pathable and we needed to get something else, so now we do this randomly
-    let randomIndexInTheList = Math.round(Math.random()*(theBlocks.length-1));
-    console.log('Trying to use found block at index: ' + randomIndexInTheList + ' from list size: ' + theBlocks.length)
-    let theBlock = (theBlocks.length > 0 && randomIndexInTheList>=0)?bot.blockAt(theBlocks[randomIndexInTheList]):null;
+    let theBlock = theBlocks.length > 0 ? bot.blockAt(theBlocks[0]):null;
     if (!theBlock) {
-      console.log('I did not find any ' + blockType + ' in range: ' + maxDistance)
-      if (username) {
-        bot.whisper(username, 'I did not find any ' + blockType + ' in range: ' + maxDistance)
-      }
+      logAndChat(`I did not find any block of type: ${blockType} in range: ${range}`)
     }
     return theBlock
   }
 
-  function findAndDigBlock(username, blockType, onlyTakeTopBlocks=false, maxDistance = 50) {
-    return digBlock(username, blockType, findBlock(username, blockType,onlyTakeTopBlocks, maxDistance))
+  async function gotoBlock(theBlock, range = 4.5) {
+    try {
+      logAndChat(`YES, I will goto within range: ${range} of ${positionString(theBlock.position)}`)
+      await bot.pathfinder.goto(new GoalLookAtBlock(theBlock.position, bot.world, {reach: range}))
+    } catch (err) {
+      console.error('Error going to a block', err)
+    }
   }
 
-  function findAndAttackTarget(username, targetType) {
+  async function digBlock(theBlock) {
+    if (theBlock) {
+      try {
+        const blockName = theBlock.displayName || theBlock.name;
+        logAndChat(`YES, I will dig - ${blockName}`)
+        const bestHarvestTool = bot.pathfinder.bestHarvestTool(theBlock)
+        if (bestHarvestTool) {
+          await bot.equip(bestHarvestTool, 'hand').catch((err) => {
+            console.error('Unable to equip a better tool', err)
+          })
+        }
+        await bot.dig(theBlock)
+        logAndChat('I dug up a ' + blockName)
+      } catch (err) {
+        console.error('Error digging a block', err)
+      }
+    }
+  }
+
+  async function findAndDigBlock(blockType, onlyFindTopBlocks=false, maxDistance = 50) {
+    let theBlock = findBlock(blockType, onlyFindTopBlocks, maxDistance)
+    await gotoBlock(theBlock)
+    await digBlock(theBlock)
+  }
+
+  function findAndAttackTarget(targetType) {
     // make sure the bot doesn't target us for death
     // also make sure we don't re-pick the last target on errors
-    const entity = bot.nearestEntity(ne => ((!targetType || (ne.name && (ne.name.toLowerCase().includes(targetType.toLowerCase()))) || (ne.displayName && (ne.displayName.toLowerCase().includes(targetType.toLowerCase())))) && (!username || ne.username !== username) && (ne.health > 0) && (ne.type === 'mob' || ne.type === 'player')));
+    const entity = bot.nearestEntity(ne => ((!targetType || (ne.name && (ne.name.toLowerCase().includes(targetType.toLowerCase()))) || (ne.displayName && (ne.displayName.toLowerCase().includes(targetType.toLowerCase())))) && (ne.health > 0) && (ne.type === 'mob' || ne.type === 'player')));
     if (!entity) {
-      console.log('NO, There are none of ' + targetType + ' to attack')
-      if (username) {
-        bot.whisper(username, 'NO, There are none of ' + targetType + ' to attack')
-      }
+      logAndChat('NO, There are none of ' + targetType + ' to attack')
     } else {
-      console.log('YES, I will attack ' + entity.displayName || entity.name)
-      if (username) {
-        bot.whisper(username, 'YES, I will attack ' + entity.displayName || entity.name)
-      }
+      logAndChat('YES, I will attack ' + entity.displayName || entity.name)
       let goalSet = false;
       let myInterval = setInterval(function() {
         if (keepAttacking) {
@@ -711,13 +628,10 @@ function configureBot(bot, matchInfoEmitter) {
               }
             }
           } else {
-            console.log('My target died ... finding a new target')
-            if (username) {
-              bot.whisper(username, 'My target died ... finding a new target')
-            }
+            logAndChat('My target died ... finding a new target')
             bot.pathfinder.stop()
             bot.pathfinder.setGoal(null)
-            findAndAttackTarget(username, targetType)
+            findAndAttackTarget(targetType)
           }
         } else {
           clearInterval(myInterval);
