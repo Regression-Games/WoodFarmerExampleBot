@@ -155,41 +155,21 @@ function configureBot(bot, matchInfoEmitter) {
     } else if (message === 'stop') {
       logAndChat('YES, I will stop')
       stopBot()
-    } else if (message.startsWith('locate')) {
-      // TODO Implement the bot telling you how many degrees left or right and up or down to walk toward it
     } else if (message.startsWith('come')) {
       const cmd = message.split(' ')
       let range = undefined;
       if (cmd.length >= 2) { // goto x y z
         range = cmd[1]
       }
+      let entity = findPlayerEntity(username)
       if (range) {
-        comeToPlayer(username, range).catch((err) => {
+        comeToEntity(entity, range).catch((err) => {
           console.error("Couldn't find: " + username + " in range: " + range, err)
         })
       } else {
-        comeToPlayer(username).catch((err) => {
+        comeToEntity(entity).catch((err) => {
           console.error("Couldn't find: " + username, err)
         })
-      }
-    } else if (message.startsWith('goto')) {
-      const cmd = message.split(' ')
-
-      if (cmd.length === 4) { // goto x y z
-        const x = parseInt(cmd[1], 10)
-        const y = parseInt(cmd[2], 10)
-        const z = parseInt(cmd[3], 10)
-
-        bot.pathfinder.setGoal(new GoalBlock(x, y, z))
-      } else if (cmd.length === 3) { // goto x z
-        const x = parseInt(cmd[1], 10)
-        const z = parseInt(cmd[2], 10)
-
-        bot.pathfinder.setGoal(new GoalXZ(x, z))
-      } else if (cmd.length === 2) { // goto y
-        const y = parseInt(cmd[1], 10)
-
-        bot.pathfinder.setGoal(new GoalY(y))
       }
     } else if (message.startsWith('follow')) {
       const cmd = message.split(' ')
@@ -198,10 +178,11 @@ function configureBot(bot, matchInfoEmitter) {
         range = parseInt(cmd[1], 10)
         console.log('range: ' + range)
       }
+      let entity = findPlayerEntity(username)
       if (range) {
-        followPlayer(username, range)
+        followEntity(entity, range)
       } else {
-        followPlayer(username)
+        followEntity(entity)
       }
     } else if (message.startsWith('avoid')) {
       const cmd = message.split(' ')
@@ -210,10 +191,11 @@ function configureBot(bot, matchInfoEmitter) {
         range = parseInt(cmd[1], 10)
         console.log('range: ' + range)
       }
+      let entity = findPlayerEntity(username)
       if (range) {
-        avoidPlayer(username, range)
+        avoidEntity(entity, range)
       } else {
-        avoidPlayer(username)
+        avoidEntity(entity)
       }
     } else if (message.startsWith('pickup')) {
       const cmd = message.split(' ')
@@ -271,10 +253,10 @@ function configureBot(bot, matchInfoEmitter) {
       keepAttacking = true;
       const cmd = message.split(' ')
       let targetType = undefined;
-      if (cmd.length >= 2) { // goto x y z
+      if (cmd.length >= 2) {
         targetType = cmd[1]
       }
-      findAndAttackTarget(targetType)
+      attackRoutine(targetType)
     } else if (message.startsWith('farm')) {
       stopBot()
       const cmd = message.split(' ')
@@ -505,33 +487,34 @@ function configureBot(bot, matchInfoEmitter) {
     }
   }
 
-  async function comeToPlayer(username, range = 1) {
-    const target = bot.players[username] ? bot.players[username].entity : null
-    if (!target) {
-      logAndChat(`I don't see: ${username}`)
+  function findPlayerEntity(username) {
+    return bot.players[username] ? bot.players[username].entity : null
+  }
+
+  async function comeToEntity(entity, range = 1) {
+    if (!entity) {
+      logAndChat(`I don't see: ${(entity.displayName || entity.name)}`)
     } else {
-      logAndChat(`YES, I will come to range: ${range} away from: ${username}`)
-      await bot.pathfinder.goto(new GoalNear(target.position.x, target.position.y, target.position.z, range))
+      logAndChat(`YES, I will come to range: ${range} away from: ${(entity.displayName || entity.name)}`)
+      await bot.pathfinder.goto(new GoalNear(entity.position.x, entity.position.y, entity.position.z, range))
     }
   }
 
-  async function followPlayer(username, range = 2) {
-    const target = bot.players[username] ? bot.players[username].entity : null
-    if (!target) {
-      logAndChat(`I don't see: ${username}`)
+  async function followEntity(entity, range = 2) {
+    if (!entity) {
+      logAndChat(`I don't see: ${(entity.displayName || entity.name)}`)
     } else {
-      logAndChat(`YES, I will follow at range: ${range} away from: ${username}`)
-      bot.pathfinder.setGoal(new GoalFollow(target, range), true)
+      logAndChat(`YES, I will follow at range: ${range} away from: ${(entity.displayName || entity.name)}`)
+      bot.pathfinder.setGoal(new GoalFollow(entity, range), true)
     }
   }
 
-  async function avoidPlayer(username, range= 5) {
-    const target = bot.players[username] ? bot.players[username].entity : null
-    if (!target) {
-      logAndChat(`I don't see: ${username}`)
+  async function avoidEntity(entity, range= 5) {
+    if (!entity) {
+      logAndChat(`I don't see: ${(entity.displayName || entity.name)}`)
     } else {
-      logAndChat(`YES, I will stay at least range: ${range} away from: ${username}`)
-      bot.pathfinder.setGoal(new GoalInvert(new GoalFollow(target, range)), true)
+      logAndChat(`YES, I will follow at range: ${range} away from: ${(entity.displayName || entity.name)}`)
+      bot.pathfinder.setGoal(new GoalInvert(new GoalFollow(entity, range)), true)
     }
   }
 
@@ -608,41 +591,30 @@ function configureBot(bot, matchInfoEmitter) {
     await digBlock(theBlock)
   }
 
-  function findAndAttackTarget(targetType) {
-    // make sure the bot doesn't target us for death
-    // also make sure we don't re-pick the last target on errors
-    const entity = bot.nearestEntity(ne => ((!targetType || (ne.name && (ne.name.toLowerCase().includes(targetType.toLowerCase()))) || (ne.displayName && (ne.displayName.toLowerCase().includes(targetType.toLowerCase())))) && (ne.health > 0) && (ne.type === 'mob' || ne.type === 'player')));
-    if (!entity) {
-      logAndChat('NO, There are none of ' + targetType + ' to attack')
-    } else {
-      logAndChat('YES, I will attack ' + entity.displayName || entity.name)
-      let goalSet = false;
-      let myInterval = setInterval(function() {
-        if (keepAttacking) {
-          if (entity && entity.isValid && bot.isValid && entity.health >0 && bot.entity.health >0) {
-
-            let distance = entity.position.distanceTo(bot.entity.position)
-            if (distance < 3) {
-              bot.attack(entity, true);
-            } else {
-              if (!goalSet) {
-                bot.pathfinder.setGoal(new GoalFollow(entity, 1), true);
-                goalSet = true;
-              }
-            }
-          } else {
-            logAndChat('My target died ... finding a new target')
-            bot.pathfinder.stop()
-            bot.pathfinder.setGoal(null)
-            findAndAttackTarget(targetType)
-          }
-        } else {
-          clearInterval(myInterval);
-        }
-      },100);
-    }
-
+  function findAttackableEntity(targetType) {
+    return bot.nearestEntity(ne => ((!targetType || (ne.name && (ne.name.toLowerCase().includes(targetType.toLowerCase()))) || (ne.displayName && (ne.displayName.toLowerCase().includes(targetType.toLowerCase())))) && (ne.health > 0) && (ne.type === 'mob' || ne.type === 'player')));
   }
+
+  async function attackEntity(entity) {
+    if (!entity) {
+      logAndChat('NO, There is no target to attack')
+    } else {
+      try {
+        bot.attack(entity, true);
+      } catch(err) {
+        console.log(`Error attacking target: ${(entity.displayName || entity.name)}`, err)
+      }
+    }
+  }
+
+  async function attackRoutine(targetType) {
+    let entity = findAttackableEntity(targetType)
+    attackEntity(entity)
+    if (keepAttacking) {
+      attackRoutine(targetType)
+    }
+  }
+
 }
 
 exports.configureBot = configureBot
