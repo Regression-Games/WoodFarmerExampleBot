@@ -418,6 +418,11 @@ function configureBot(bot, matchInfoEmitter) {
     }
   }
 
+  function itemEntityName(entity) {
+    let theItem = mcData.items[entity.metadata[8].itemId]
+    return theItem.displayName || theItem.name
+  }
+
   function findItemInRange(itemName, range= 30) {
     logAndChat("Looking for item " + itemName + " in range " + range)
     return bot.nearestEntity((entity) => {
@@ -426,9 +431,9 @@ function configureBot(bot, matchInfoEmitter) {
         try {
           // Understanding entity metadata ... https://wiki.vg/Entity_metadata#Entity_Metadata_Format
           // since this is an item entity, we can parse the item data from field index 8
-          let theItem = mcData.items[entity.metadata[8].itemId]
-          console.log("Evaluating: " + (theItem.displayName || theItem.name) + " - id: " + entity.id + " at (" + entity.position.x + "," + entity.position.y + "," + entity.position.z + ") - metadata: " + JSON.stringify(entity.metadata[8]))
-          if (!(!itemName || itemName.toLowerCase().contains(theItem.displayName.toLowerCase()) || itemName.toLowerCase.contains(theItem.name.toLowerCase()))) {
+          let theItemName = itemEntityName(entity)
+          console.log("Evaluating: " + theItemName + " - id: " + entity.id + " at (" + entity.position.x + "," + entity.position.y + "," + entity.position.z + ") - metadata: " + JSON.stringify(entity.metadata[8]))
+          if (!(!itemName || itemName.toLowerCase().contains(theItemName.toLowerCase()))) {
             matchedName = false
           }
         } catch (err) {
@@ -451,7 +456,7 @@ function configureBot(bot, matchInfoEmitter) {
    */
   async function pickupItem(item) {
     if (item) {
-      logAndChat('Going to pickup item - ' + (item.displayName || item.name))
+      logAndChat('Going to pickup item - ' + itemEntityName(item))
       await bot.pathfinder.goto(new GoalBlock(item.position.x, item.position.y, item.position.z))
     } else {
       logAndChat('No Item to pickup')
