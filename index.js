@@ -427,7 +427,7 @@ function configureBot(bot, matchInfoEmitter) {
         try {
           // Understanding entity metadata ... https://wiki.vg/Entity_metadata#Entity_Metadata_Format
           // since this is an item entity, we can parse the item data from field index 8
-          let theItem = mineflayer.Item.fromNotch(entity.metadata[8])
+          let theItem = mcData.items[entity.metadata[8].itemId]
           console.log("Item Info: " + (theItem.displayName || theItem.name))
         } catch (err) {
           console.error(`Couldn't convert item from notch data: ${err.message}`)
