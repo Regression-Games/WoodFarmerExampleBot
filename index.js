@@ -163,11 +163,11 @@ function configureBot(bot, matchInfoEmitter) {
       }
       let entity = findPlayerEntity(username)
       if (range) {
-        comeToEntity(entity, range).catch((err) => {
+        gotoEntity(entity, range).catch((err) => {
           console.error("Couldn't find: " + username + " in range: " + range, err)
         })
       } else {
-        comeToEntity(entity).catch((err) => {
+        gotoEntity(entity).catch((err) => {
           console.error("Couldn't find: " + username, err)
         })
       }
@@ -323,7 +323,7 @@ function configureBot(bot, matchInfoEmitter) {
         if (target) {
           console.log(`Farmer (${failureCount}):  DeliveryRun: Trying to deliver ${itemType} to: ${target[1].entity.username}`)
           try {
-            await comeToEntity(target[1].entity, 3)
+            await gotoEntity(target[1].entity, 3)
             await bot.lookAt(target[1].entity.position).catch((err) => {
               console.error(`Farmer (${failureCount}): Failed to look at player position`, err)
             })
@@ -491,7 +491,7 @@ function configureBot(bot, matchInfoEmitter) {
     return bot.players[username] ? bot.players[username].entity : null
   }
 
-  async function comeToEntity(entity, range = 1) {
+  async function gotoEntity(entity, range = 1) {
     if (!entity) {
       logAndChat(`I don't see: ${(entity.displayName || entity.name)}`)
     } else {
@@ -615,6 +615,7 @@ function configureBot(bot, matchInfoEmitter) {
 
   async function attackRoutine(targetType) {
     let entity = findAttackableEntity(targetType)
+    await gotoEntity(entity, 2)
     attackEntity(entity)
     if (keepAttacking) {
       attackRoutine(targetType)
