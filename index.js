@@ -595,7 +595,7 @@ function configureBot(bot, matchInfoEmitter) {
     return bot.nearestEntity(ne => {
       if( !targetType || (ne.name && (ne.name.toLowerCase().includes(targetType.toLowerCase()))) || (ne.displayName && (ne.displayName.toLowerCase().includes(targetType.toLowerCase())))) {
         logAndChat(`Evaluating attack target: ${(ne.displayName || ne.name)} , isValid: ${ne.isValid} , health: ${ne.health} , isMobOrPlayer: ${(ne.type === 'mob' || ne.type === 'player')}`)
-        return ((ne.health > 0) && (ne.type === 'mob' || ne.type === 'player'))
+        return (ne.isValid && (ne.type === 'mob' || ne.type === 'player'))
       }
       return false
     });
