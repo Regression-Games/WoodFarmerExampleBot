@@ -323,7 +323,7 @@ function configureBot(bot, matchInfoEmitter) {
         if (target) {
           console.log(`Farmer (${failureCount}):  DeliveryRun: Trying to deliver ${itemType} to: ${target[1].entity.username}`)
           try {
-            await comeToPlayer(target[1].entity.username, 3)
+            await comeToEntity(target[1].entity, 3)
             await bot.lookAt(target[1].entity.position).catch((err) => {
               console.error(`Farmer (${failureCount}): Failed to look at player position`, err)
             })
