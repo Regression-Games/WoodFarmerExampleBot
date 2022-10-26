@@ -304,7 +304,7 @@ function configureBot(bot, matchInfoEmitter) {
    * @param itemType
    * @param deliveryThreshold
    */
-  async function farmerRoutine(itemType, deliveryThreshold = 10, failureCount = 0) {
+  async function farmerRoutine(itemType, deliveryThreshold = 30, failureCount = 0) {
     console.log(`Farmer (${failureCount}): farmingInProgress=${farmingInProgress}, itemType: ${itemType}`)
     if (farmingInProgress) {
       // do a delivery run
